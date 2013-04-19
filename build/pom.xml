@@ -1,0 +1,93 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<groupId>org.jboss.jbossas</groupId>
+		<artifactId>jboss-as-parent</artifactId>
+		<version>6.1.1-SNAPSHOT</version>
+	</parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-build</artifactId>
+  <packaging>pom</packaging>
+  <name>JBoss Application Server Build</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server Build</description>
+
+  <dependencies>
+    
+    <!-- 
+      -  Dependencies on the AS modules and additional artifacts 
+      -  These are included here to force the dist module to build last.
+      -  All to come through the dependency chain, but not be exported
+      -->
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-depchain</artifactId>
+      <version>${project.version}</version>
+      <optional>true</optional>
+      <type>pom</type>
+    </dependency>
+    
+  </dependencies>
+  
+  <profiles>
+    <profile>
+      <id>dist</id>
+      <activation>
+        <property>
+          <name>!skip-dist</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <!-- Download the license files for each dependency -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <version>1.0-beta-2</version>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>download-licenses</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <licensesConfigFile>${project.basedir}/src/licenses.xml</licensesConfigFile>
+                  <licensesOutputDirectory>${project.build.directory}/jboss-${project.version}/docs/licenses</licensesOutputDirectory>
+                  <licensesOutputFile>${project.build.directory}/jboss-${project.version}/docs/licenses/licenses.xml</licensesOutputFile>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>build-dist</id>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <tasks>
+                    <dependencyfilesets/>
+                    <mapper id="remove-versions"
+                            classname="org.apache.maven.ant.tasks.support.VersionMapper"
+                            from="${maven.project.dependencies.versions}" to="flatten" />
+                    <ant antfile="build.xml" inheritRefs="true">
+                      <target name="dist"/>
+                    </ant>
+                 </tasks>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>    
+  </profiles>
+
+</project>

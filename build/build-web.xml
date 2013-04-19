@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Id: build.xml 97631 2009-12-09 17:46:37Z pgier $ -->
+
+<project default="main" name="JBoss WE Distribution Build" xmlns:maven="antlib:org.apache.maven.artifact.ant">
+
+    <patternset id="source.ignore">
+        <exclude name="**/output/**" />
+        <exclude name="**/target/**" />
+        <exclude name="**/CVS/**" />
+        <exclude name="**/.classpath/**" />
+        <exclude name="**/.metadata/**" />
+        <exclude name="**/.project/**" />
+        <exclude name="**/.settings/**" />
+        <exclude name="**/.svn/**" />
+        <exclude name="**/local.properties" />
+    </patternset>
+
+    <!-- ================================================================== -->
+    <!-- Configuration                                                      -->
+    <!-- ================================================================== -->
+
+    <target name="configure">
+
+        <!-- =================== -->
+        <!-- Basic Configuration -->
+        <!-- =================== -->
+
+        <dirname property="project.root" file="${basedir}" />
+        <property name="project.build" value="${project.root}/build" />
+        <property name="project.tools" value="${project.root}/tools" />
+
+        <!-- Version identifiers for the server. -->
+        <xmlproperty file="../pom.xml" prefix="pom" />
+
+        <!-- Module name(s) & version -->
+        <property name="dist.module.name" value="jboss" />
+        <property name="dist.module.Name" value="JBoss Build" />
+        <property name="dist.module.version" value="6.1.1-SNAPSHOT" />
+        <property name="dist.module.output" value="${basedir}/target" />
+
+        <!-- Install/Release structure -->
+        <property name="install.id" value="${dist.module.name}-${dist.module.version}" />
+        <property name="release.id" value="${install.id}" />
+
+        <property name="install.root" value="${dist.module.output}/${install.id}" />
+
+        <property name="install.docs" value="${install.root}/docs" />
+        <property name="install.api" value="${install.docs}/api" />
+        <property name="install.jmx-api" value="${install.docs}/jmx-api" />
+        <property name="install.todo" value="${install.docs}/todo" />
+        <property name="install.examples" value="${install.docs}/examples" />
+        <property name="install.examples.jca" value="${install.docs}/examples/jca" />
+        <property name="install.examples.jms" value="${install.docs}/examples/jms" />
+        <property name="install.examples.jbossweb" value="${install.examples}/jbossweb" />
+        <property name="install.examples.netboot" value="${install.examples}/netboot" />
+        <!--<property name="install.examples.binding-manager" value="${install.examples}/binding-manager"/>-->
+        <property name="install.examples.varia" value="${install.examples}/varia" />
+        <property name="install.dtd" value="${install.docs}/dtd" />
+        <property name="install.schema" value="${install.docs}/schema" />
+
+        <property name="install.bin" value="${install.root}/bin" />
+        <property name="install.etc" value="${install.root}/etc" />
+        <property name="install.client" value="${install.root}/client" />
+        <property name="install.lib" value="${install.root}/lib" />
+
+        <property name="install.server" value="${install.root}/server" />
+
+        <property name="install.web" value="${install.server}/web" />
+        <property name="install.web.lib" value="${install.web}/lib" />
+        <property name="install.web.deploy" value="${install.web}/deploy" />
+        <property name="install.web.deployers" value="${install.web}/deployers" />
+        <property name="install.web.conf" value="${install.web}/conf" />
+
+        <!-- Module name(s) & version -->
+        <property name="web.dist.module.name" value="jboss-web" />
+        <property name="web.dist.module.Name" value="JBoss Build" />
+        <property name="web.dist.module.version" value="3.0.0-beta-3" />
+
+        <property name="web.install.id" value="${web.dist.module.name}-${web.dist.module.version}" />
+        <property name="web.release.id" value="${web.install.id}" />
+
+        <property name="web.install.root" value="${dist.module.output}/${web.install.id}" />
+
+    </target>
+
+    <target name="main" depends="configure">
+        <mkdir dir="${web.install.root}" />
+        <copy todir="${web.install.root}">
+            <fileset dir="${install.root}">
+                <exclude name="boot.log" />
+                <exclude name="bin/native/**" />
+                <exclude name="client/**" />
+                <exclude name="common/lib/antlr.jar" />
+                <exclude name="common/lib/autonumber-plugin.jar" />
+                <exclude name="common/lib/bcel.jar" />
+                <exclude name="common/lib/bsf.jar" />
+                <exclude name="common/lib/bsh.jar" />
+                <exclude name="common/lib/commons-beanutils.jar" />
+                <exclude name="common/lib/commons-collections.jar" />
+                <exclude name="common/lib/cxf-*.*" />
+                <exclude name="common/lib/FastInfoset.jar" />
+                <exclude name="common/lib/hibernate-commons-annotations.jar" />
+                <exclude name="common/lib/hibernate-core.jar" />
+                <exclude name="common/lib/hibernate-entitymanager.jar" />
+                <exclude name="common/lib/hibernate-validator.jar" />
+                <exclude name="common/lib/hibernate-validator-legacy.jar" />
+                <exclude name="common/lib/hornet*.*" />
+                <exclude name="common/lib/hsqldb.jar" />
+                <exclude name="common/lib/hsqldb-plugin.jar" />
+                <exclude name="common/lib/jaxen.jar" />
+                <exclude name="common/lib/jaxrpc-api.jar" />
+                <exclude name="common/lib/jaxws-api.jar" />
+                <exclude name="common/lib/jboss-as-hibernate-int.jar" />
+                <exclude name="common/lib/jboss-as-hornetq-int.jar" />
+                <exclude name="common/lib/jboss-jaxb-intros.jar" />
+                <exclude name="common/lib/jbossas-remoting.jar" />
+                <exclude name="common/lib/jboss-common-jdbc-wrapper.jar" />
+                <exclude name="common/lib/jboss-current-invocation-aspects.jar" />
+                <exclude name="common/lib/jbosscx-client.jar" />
+                <exclude name="common/lib/jboss-ejb3_1.jar" />
+                <exclude name="common/lib/jboss-ejb3-cache.jar" />
+                <exclude name="common/lib/jboss-ejb3-timeout-3.1.jar" />
+                <exclude name="common/lib/jboss-ejb3-concurrency-*.jar" />
+                <exclude name="common/lib/jboss-ejb3-context-base.jar" />
+                <exclude name="common/lib/jboss-ejb3-context-naming.jar" />
+                <exclude name="common/lib/jboss-ejb3-deployers.jar" />
+                <exclude name="common/lib/jboss-ejb3-endpoint.jar" />
+                <exclude name="common/lib/jboss-ejb3-ext-api-impl.jar" />
+                <exclude name="common/lib/jboss-ejb3-interceptors.jar" />
+                <exclude name="common/lib/jboss-ejb3-jpa-int.jar" />
+                <exclude name="common/lib/jboss-ejb3-mc-int.jar" />
+                <exclude name="common/lib/jboss-ejb3-metadata-deployers.jar" />
+                <exclude name="common/lib/jboss-ejb3-metadata.jar" />
+                <exclude name="common/lib/jboss-ejb3-nointerface-impl.jar" />
+                <exclude name="common/lib/jboss-ejb3-nointerface-spi.jar" />
+                <exclude name="common/lib/jboss-ejb3-proxy-clustered.jar" />
+                <exclude name="common/lib/jboss-ejb3-proxy-impl.jar" />
+                <exclude name="common/lib/jboss-ejb3-proxy-spi.jar" />
+                <exclude name="common/lib/jboss-ejb3-security.jar" />
+                <exclude name="common/lib/jboss-ejb3-singleton-*.jar" />
+                <exclude name="common/lib/jboss-ejb3-timeout-3.1.jar" />
+                <exclude name="common/lib/jboss-ejb3-timeout-spi.jar" />
+                <exclude name="common/lib/jboss-ejb3-timerservice-spi.jar" />
+                <exclude name="common/lib/jboss-ejb3-transactions.jar" />
+                <exclude name="common/lib/jboss-ejb3-vfs-impl-vfs3.jar" />
+                <exclude name="common/lib/jboss-ejb3-vfs-impl-vfs3.jar" />
+                <exclude name="common/lib/jboss-embedded-*.jar" />
+                <exclude name="common/lib/jbossha.jar" />
+                <exclude name="common/lib/jboss-ha-server-api.jar" />
+                <exclude name="common/lib/jboss-ha-server-cache-jbc.jar" />
+                <exclude name="common/lib/jboss-iiop-client.jar" />
+                <exclude name="common/lib/jboss-iiop.jar" />
+                <exclude name="common/lib/jboss-jca.jar" />
+                <exclude name="common/lib/jboss-jpa-impl.jar" />
+                <exclude name="common/lib/jboss-jpa-spi.jar" />
+                <exclude name="common/lib/jboss-jpa-vfs3.jar" />
+                <exclude name="common/lib/jbossjts-integration.jar" />
+                <exclude name="common/lib/jbossjts.jar" />
+                <exclude name="common/lib/jboss-marshalling.jar" />
+                <exclude name="common/lib/jboss-marshalling-river" />
+                <exclude name="common/lib/jboss-messaging-int.jar" />
+                <exclude name="common/lib/jboss-messaging.jar" />
+                <exclude name="common/lib/jboss-remoting-aspects.jar" />
+                <exclude name="common/lib/jboss-remoting.jar" />
+                <exclude name="common/lib/jboss-remoting-3.jar" />
+                <exclude name="common/lib/jboss-serialization.jar" />
+                <exclude name="common/lib/jbossws-common.jar" />
+                <exclude name="common/lib/jbossws-framework.jar" />
+                <exclude name="common/lib/jbossws-jboss60.jar" />
+                <exclude name="common/lib/jbossws-native-core.jar" />
+                <exclude name="common/lib/jettison.jar" />
+                <exclude name="common/lib/mail.jar" />
+                <exclude name="common/lib/netty.jar" />
+                <exclude name="common/lib/quartz.jar" />
+                <exclude name="common/lib/saaj-api.jar" />
+                <exclude name="common/lib/scheduler-plugin-example.jar" />
+                <exclude name="common/lib/scheduler-plugin.jar" />
+                <exclude name="common/lib/serializer.jar" />
+                <exclude name="common/lib/shrinkwrap-*.jar" />
+                <exclude name="common/lib/spring-*.*" />
+                <exclude name="common/lib/weld-api.jar" />
+                <exclude name="common/lib/wscommons-policy.jar" />
+                <exclude name="common/lib/wsdl4j.jar" />
+                <exclude name="common/lib/xalan.jar" />
+                <exclude name="common/lib/XmlSchema.jar" />
+                <exclude name="common/lib/xmlsec.jar" />
+                <exclude name="common/deploy/admin-console.war/**" />
+                <exclude name="common/deploy/jbossws-console.war/**" />
+                <exclude name="lib/jaxb-xjc.jar" />
+                <exclude name="lib/wstx-lgpl.jar" />
+                <exclude name="lib/xercesImpl.jar" />
+                <exclude name="server/**" />
+                <exclude name="docs/**" />
+            </fileset>
+        </copy>
+        <copy todir="${web.install.root}/server/default">
+            <fileset dir="${install.root}/server/jbossweb-standalone">
+            </fileset>
+        </copy>
+        <chmod perm="+x">
+          <fileset dir="${web.install.root}/bin">
+            <include name="**/*.sh"/>
+          </fileset>
+        </chmod>
+
+        <zip destfile="${basedir}/target/${web.install.id}.zip">
+            <zipfileset dir="${web.install.root}" prefix="${web.install.id}">
+            </zipfileset>
+        </zip>
+        <checksum file="${basedir}/target/${web.install.id}.zip" />
+        <checksum file="${basedir}/target/${web.install.id}.zip" algorithm="SHA-256" />
+
+        <tar destfile="${basedir}/target/${web.install.id}.tar.gz" longfile="gnu" compression="gzip">
+            <tarfileset dir="${web.install.root}" prefix="${web.install.id}" mode="755">
+              <include name="bin/*.sh"/>
+            </tarfileset>
+            <tarfileset dir="${web.install.root}" prefix="${web.install.id}">
+              <exclude name="bin/*.sh"/>
+            </tarfileset>
+        </tar>
+        <checksum file="${basedir}/target/${web.install.id}.tar.gz" />
+        <checksum file="${basedir}/target/${web.install.id}.tar.gz" algorithm="SHA-256" />
+
+        <tar destfile="${basedir}/target/${web.install.id}-src.tar.gz" longfile="gnu" compression="gzip">
+            <tarfileset dir="${basedir}/.." prefix="${web.install.id}-src">
+                <patternset refid="source.ignore" />
+                <exclude name="tools/bin/*" />
+                <exclude name="build/target/**" />
+                <exclude name="testsuite/**" />
+            </tarfileset>
+            <tarfileset dir="${basedir}/.." prefix="${web.install.id}-src" mode="755">
+                <patternset refid="source.ignore" />
+                <include name="tools/bin/*" />
+            </tarfileset>
+        </tar>
+        <checksum file="${basedir}/target/${web.install.id}-src.tar.gz" />
+        <checksum file="${basedir}/target/${web.install.id}-src.tar.gz" algorithm="SHA-256" />
+
+    </target>
+
+    <target name="clean" depends="configure">
+        <delete dir="${web.install.root}" />
+    </target>
+
+</project>

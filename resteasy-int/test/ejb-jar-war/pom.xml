@@ -1,0 +1,19 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.jboss.jbossas</groupId>
+        <artifactId>jboss-as-parent</artifactId>
+        <version>6.1.1-SNAPSHOT</version>
+    </parent>
+    <name>Resteasy JBoss AS Integration Testing EJB + JAR + WAR</name>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>resteasy-ejb-jar-war-testing-pom</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>ejb-jar</module>
+        <module>ejb-war</module>
+    </modules>
+</project>

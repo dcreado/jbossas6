@@ -1,0 +1,36 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="EarStructure" class="org.jboss.test.deployers.vfs.structure.ear.support.MockEarStructureDeployer"/>
+  <bean name="WarStructure" class="org.jboss.test.deployers.vfs.structure.war.support.MockWarStructureDeployer"/>
+
+  <bean name="JWBMDDeployer" class="org.jboss.weld.integration.deployer.ext.JBossWeldMetaDataDeployer"/>
+  <bean name="WBFilesDeployer" class="org.jboss.weld.integration.deployer.metadata.WeldFilesDeployer"/>
+  <bean name="WBDiscoveryDeployer" class="org.jboss.weld.integration.deployer.env.WeldDiscoveryDeployer"/>
+
+  <bean name="DynamicDependencyCreator" class="org.jboss.weld.integration.deployer.env.DynamicDependencyCreator">
+    <constructor>
+      <parameter><inject bean="jboss.kernel:service=KernelController"/></parameter>
+    </constructor>
+  </bean>
+
+  <bean name="JBWMDDeployer" class="org.jboss.test.deployers.support.deployer.MockWebDeployer"/>
+  <bean name="WarCLDeployer" class="org.jboss.test.deployers.support.deployer.MockWarClassLoaderDeployer"/>
+  <bean name="MockUrlIntDeployer" class="org.jboss.test.deployers.support.deployer.MockCoreIntegrationDeployer"/>
+
+  <bean name="EjbServicesDeployer" class="org.jboss.weld.integration.deployer.env.EjbServicesDeployer" />
+
+  <bean name="DeploymentDeployer" class="org.jboss.weld.integration.deployer.env.FlatDeploymentDeployer"/>
+
+  <bean name="BootDeployer" class="org.jboss.test.deployers.support.deployer.MockBootDeployer"/>
+
+  <bean name="JndiBinder" class="org.jboss.test.deployers.support.deployer.CheckableJndiBinder"/>
+
+  <!-- Mock EJB utils -->
+
+  <beanfactory name="JBossEjbServices" class="org.jboss.test.deployers.support.MockEjbServices"/>
+
+  <bean name="JBossTransactionServices" class="org.jboss.test.deployers.support.MockTransactionServices"/>
+
+  <bean name="RealTransactionManager" class="java.lang.Object"/>
+
+</deployment>

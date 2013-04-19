@@ -1,0 +1,44 @@
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+		
+		 <data-source>
+         <description>en-dataSource2-desc</description>
+         <name>DSWebXML</name>
+         <class-name>org.jboss.test.jca.dsdeployer.MockDataSource</class-name>
+         <server-name>localhost</server-name>
+         <port-number>2</port-number>
+         <database-name>localdb</database-name>
+         <url>jdbc:hsqldb:mem:JCADataSourceDeployerDB</url>
+         <user>sa</user>
+		 <password></password>
+         <login-timeout>2</login-timeout>
+         <transactional>false</transactional>
+         <isolation-level>TRANSACTION_READ_COMMITTED</isolation-level>
+         <initial-pool-size>2</initial-pool-size>
+         <max-pool-size>2</max-pool-size>
+         <min-pool-size>2</min-pool-size>
+         <max-idle-time>2</max-idle-time>
+         <max-statements>2</max-statements>
+      </data-source>
+		<data-source>
+         <description>en-dataSource2-desc</description>
+         <name>WebOverrideDS</name>
+         <class-name>org.jboss.test.jca.dsdeployer.MockDataSource</class-name>
+         <server-name>localhost</server-name>
+         <port-number>2</port-number>
+         <database-name>localdb</database-name>
+         <url>jdbc:hsqldb:mem:JCADataSourceDeployerDB</url>
+         <user>sa</user>
+		 <password></password>
+         <login-timeout>2</login-timeout>
+         <transactional>true</transactional>
+         <isolation-level>TRANSACTION_READ_COMMITTED</isolation-level>
+         <initial-pool-size>2</initial-pool-size>
+         <max-pool-size>2</max-pool-size>
+         <min-pool-size>2</min-pool-size>
+         <max-idle-time>2</max-idle-time>
+         <max-statements>2</max-statements>
+      </data-source>
+	
+</web-app>

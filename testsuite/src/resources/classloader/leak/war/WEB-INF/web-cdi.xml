@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+   <description>Test servlets used to test session contexts.</description>
+   <display-name>Session Context Tests</display-name>
+   <servlet>
+      <display-name>Introspection Service for Sessions</display-name>
+      <servlet-name>sessionIntrospector</servlet-name>
+      <servlet-class>org.jboss.test.classloader.leak.web.CdiIntrospectSession</servlet-class>
+   </servlet>
+   <servlet>
+      <display-name>Session Invalidation</display-name>
+      <servlet-name>invalidator</servlet-name>
+      <servlet-class>org.jboss.test.classloader.leak.web.CdiInvalidateSession</servlet-class>
+   </servlet>
+   <servlet-mapping>
+      <servlet-name>sessionIntrospector</servlet-name>
+      <url-pattern>/IntrospectCDISession</url-pattern>
+   </servlet-mapping>
+   <servlet-mapping>
+      <servlet-name>invalidator</servlet-name>
+      <url-pattern>/InvalidateCDISession</url-pattern>
+   </servlet-mapping>
+   <session-config>
+      <session-timeout>10</session-timeout>
+   </session-config>
+   <login-config>
+      <auth-method>BASIC</auth-method>
+   </login-config>
+</web-app>

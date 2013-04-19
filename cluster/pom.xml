@@ -1,0 +1,202 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-cluster</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Cluster</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (cluster module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-example-sources</id>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/examples</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rmic-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rmi-compile</id>
+            <goals>
+              <goal>rmic</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+              <includes>
+                <include>org/jboss/ha/framework/server/DistributedReplicantManagerImpl.class</include>
+                <!--<include>org/jboss/ha/framework/server/DistributedStateImpl.class</include>-->
+                <include>org/jboss/ha/jndi/HAJNDI.class</include>
+                <include>org/jboss/ha/framework/server/HARMIServerImpl.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>org/jboss/**/examples/**</exclude>
+            <exclude>org/jboss/mq/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorSourceDirectory>src/assembly</descriptorSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                                
+                <property name="build.resources.dir" location="target/resources"/>
+                <mkdir dir="${build.resources.dir}"/>
+
+                <!-- Build jgroups-channelfactory.sar -->
+                <mkdir dir="${build.resources.dir}/jgroups-channelfactory.sar/META-INF"/>   
+                <copy todir="${build.resources.dir}/jgroups-channelfactory.sar/META-INF" filtering="yes">
+                  <fileset dir="src/resources/jgroups">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <!-- Build infinispan-cache-registry.sar -->
+                <mkdir dir="${build.resources.dir}/infinispan-cache-registry.sar"/>   
+                <copy todir="${build.resources.dir}/infinispan-cache-registry.sar" filtering="yes">
+                  <fileset dir="src/resources/infinispan">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-server-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-server-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-server-cache-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jgroups</groupId>
+      <artifactId>jgroups</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.bootstrap</groupId>
+      <artifactId>jboss-bootstrap-spi-as</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnp-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.remoting</groupId>
+      <artifactId>jboss-remoting</artifactId>
+    </dependency>   
+    
+  </dependencies>
+  
+</project>

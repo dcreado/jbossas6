@@ -1,0 +1,16 @@
+<assembly>
+  <id>jbossws-jboss60-deployer</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/jbossws-jboss.deployer</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>META-INF/stack-agnostic-jboss-beans.xml</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>

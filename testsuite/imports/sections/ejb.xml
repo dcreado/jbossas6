@@ -1,0 +1,72 @@
+<project name="tests-ejb-jars">
+   <target name="_jars-ejbproxy">
+      <mkdir dir="${build.lib}"/>
+      
+      <jar destfile="${build.lib}/ejbproxy-test.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb/proxy/beans/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/ejb/proxy/">
+            <include name="META-INF/*.*"/>
+         </fileset>
+      </jar>
+   </target>
+
+   <!-- ejbdepends test -->
+   <target name="_jars-ejbdepends">
+      <mkdir dir="${build.lib}"/>
+      <jar destfile="${build.lib}/ejbdepends1.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejbdepends/ejb/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/ejbdepends/ejb1">
+            <include name="**"/>
+         </fileset>
+      </jar>
+      <jar destfile="${build.lib}/ejbdepends2.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejbdepends/ejb/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/ejbdepends/ejb2">
+            <include name="**"/>
+         </fileset>
+      </jar>
+      <jar destfile="${build.lib}/ejbdepends.ear">
+        <fileset dir="${build.resources}/ejbdepends/ear">
+           <include name="META-INF/*.*"/>
+        </fileset>
+        <fileset dir="${build.lib}">
+           <include name="ejbdepends1.jar"/>
+           <include name="ejbdepends2.jar"/>
+        </fileset>
+      </jar>
+   </target>
+
+   <!-- passivationcl test -->
+   <target name="_jars-passivationcl">
+      <mkdir dir="${build.lib}"/>
+      <jar destfile="${build.lib}/passivationcl_entity.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb/passivationcl/entity/**"/>
+         </fileset>
+      </jar>
+      <jar destfile="${build.lib}/passivationcl_stateful.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb/passivationcl/stateful/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/ejb/passivationcl/stateful">
+            <include name="**"/>
+         </fileset>
+      </jar>
+      <jar destfile="${build.lib}/passivationcl.ear">
+        <fileset dir="${build.resources}/ejb/passivationcl/ear">
+           <include name="META-INF/*.*"/>
+        </fileset>
+        <fileset dir="${build.lib}">
+           <include name="passivationcl_entity.jar"/>
+           <include name="passivationcl_stateful.jar"/>
+        </fileset>
+      </jar>
+   </target>
+
+</project>

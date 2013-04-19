@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<configuration xmlns="urn:hornetq"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                        xsi:schemaLocation="urn:hornetq /schema/hornetq-jms.xsd">
+
+
+
+   <queue name="QueueA">
+      <entry name="/queue/QueueA"/>
+   </queue>
+
+   <queue name="QueueB">
+      <entry name="/queue/QueueB"/>
+   </queue>
+
+   <queue name="QueueC">
+      <entry name="/queue/QueueC"/>
+   </queue>
+
+   <queue name="QueueD">
+      <entry name="/queue/QueueD"/>
+   </queue>
+
+</configuration>

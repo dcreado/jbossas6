@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="CacheContainerFactory" class="org.jboss.ha.ispn.DefaultCacheContainerFactory">
+    <constructor>
+      <parameter><inject bean="JChannelFactory"/></parameter>
+      <parameter><inject bean="JMXKernel" property="mbeanServer"/></parameter>
+    </constructor>
+  </bean>
+  
+  <bean name="CacheContainerRegistry" class="org.jboss.ha.ispn.DefaultCacheContainerRegistry">
+    <constructor>
+      <parameter><inject bean="CacheContainerFactory"/></parameter>
+      <parameter>
+        <bean class="org.jboss.ha.ispn.config.xml.XMLCacheContainerRegistryConfigurationSource">
+          <constructor>
+            <!-- Location of infinispan configuration file -->
+            <parameter class="java.lang.String">infinispan-configs.xml</parameter>
+          </constructor>
+        </bean>
+      </parameter>
+    </constructor>
+    <!-- If a jndiNamePrefix is defined, all cache containers will be bound to jndi by name within the specified parent context, unless name is explicitly defined -->
+    <!-- By default, only those cache containers that define an explicit jndi-name will be bound to jndi -->
+    <!--property name="jndiNamePrefix">java:infinispan</property-->
+  </bean>
+  
+</deployment>

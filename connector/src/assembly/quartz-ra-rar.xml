@@ -1,0 +1,23 @@
+<assembly>
+  <id>quartz-ra-rar</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/quartz-rar</directory>
+      <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>quartz.properties</exclude>
+      </excludes>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>target/jboss-as-connector-quartz-ra.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>quartz-ra.jar</destName>
+    </file>
+  </files>
+</assembly>

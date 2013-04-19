@@ -1,0 +1,65 @@
+<project name="tests-jbossts-jars">
+   <target name="_jars-jbossts" depends="jbqa2176, jbqa2604"/>
+   
+   <!-- JBossTS crash recovery tests -->
+   <target name="jbqa2176">
+      <jar destfile="${build.lib}/crashrecovery-astest.jar">
+         <fileset dir="${build.resources}/jbossts/crashrecovery">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+         <fileset dir="${build.resources}/jbossts/resources">
+            <include name="java.policy"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/jbossts/ASCrashRecovery01/*.class"/>
+            <include name="org/jboss/test/jbossts/crash/*.class"/>
+            <include name="org/jboss/test/jbossts/recovery/*.class"/>
+            <include name="org/jboss/test/jbossts/taskdefs/*.class"/>
+         </fileset>
+      </jar>
+   </target>
+
+   <!-- JBossTS JTS propagation tests -->
+   <target name="jbqa2604">
+      <jar destfile="${build.lib}/jts-propagation-client.jar">
+         <fileset dir="${build.resources}/jbossts/resources">
+            <include name="java.policy"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/jbossts/JTSContextPropagation01/*.class"/>
+            <include name="org/jboss/test/jbossts/crash/*.class"/>
+            <include name="org/jboss/test/jbossts/recovery/*.class"/>
+            <include name="org/jboss/test/jbossts/taskdefs/*.class"/>
+            <include name="org/jboss/test/jbossts/txpropagation/**/*.class"/>
+         </fileset>
+      </jar>
+   	
+      <jar destfile="${build.lib}/jts-propagation-ejb3.jar">
+         <fileset dir="${build.resources}/jbossts/jts-propagation/ejb3">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+         <fileset dir="${build.resources}/jbossts/resources">
+            <include name="java.policy"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/jbossts/txpropagation/*.class"/>
+            <include name="org/jboss/test/jbossts/txpropagation/ejb3/*.class"/>
+            <include name="org/jboss/test/jbossts/crash/*.class"/>
+            <include name="org/jboss/test/jbossts/recovery/*.class"/>
+         </fileset>
+      </jar>
+   	
+      <jar destfile="${build.lib}/jts-propagation-ejb2.jar">
+         <fileset dir="${build.resources}/jbossts/jts-propagation/ejb2">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+         <fileset dir="${build.resources}/jbossts/resources">
+            <include name="java.policy"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/jbossts/txpropagation/ejb2/*.class"/>
+         </fileset>
+      </jar>
+   </target>
+
+</project>

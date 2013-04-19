@@ -1,0 +1,20 @@
+<assembly>
+  <id>jms-ra-rar</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/jms-rar</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>target/jboss-as-connector-jms-ra.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>jms-ra.jar</destName>
+    </file>
+  </files>
+</assembly>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jboss PUBLIC "-//JBoss//DTD JBOSS 5.0//EN" "http://www.jboss.org/j2ee/dtd/jboss_5_0.dtd">
+
+<!--
+ NOTE: Brian Stansberry 2009/12/27. This config was originally created for use
+ with the PooledInvoker as part of a test of https://jira.jboss.org/jira/browse/JBAS-3198.
+ As part of removing the PooledInvoker I am changing it to use the UnifiedInvoker.
+ It's possible the correct thing to do is remove the test altogether, but as I'm not
+ 100% certain there's another UnifiedInvoker test covering this exact usage, I'm
+ being conservative.
+ -->
+<jboss>
+   <enterprise-beans>
+      <session>
+         <ejb-name>SessionA</ejb-name>
+         <configuration-name>Test Stateless SessionBean</configuration-name>
+         <invoker-bindings>
+            <invoker>
+               <invoker-proxy-binding-name>stateless-test-invoker</invoker-proxy-binding-name>
+               <jndi-name>SessionA</jndi-name>
+            </invoker>
+         </invoker-bindings>
+      </session>
+   </enterprise-beans>
+
+   <invoker-proxy-bindings>
+      <!--<invoker-proxy-binding>-->
+         <!--<name>stateless-pooled-invoker</name>-->
+         <!--<invoker-mbean>jboss:service=invoker,type=pooled</invoker-mbean>-->
+         <!--<proxy-factory>org.jboss.proxy.ejb.ProxyFactory</proxy-factory>-->
+         <!--<proxy-factory-config>-->
+            <!--<client-interceptors>-->
+               <!--<home>-->
+                  <!--<interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>-->
+               <!--</home>-->
+               <!--<bean>-->
+                  <!--<interceptor>org.jboss.proxy.ejb.StatelessSessionInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>-->
+                  <!--<interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>-->
+               <!--</bean>-->
+            <!--</client-interceptors>-->
+         <!--</proxy-factory-config>-->
+      <!--</invoker-proxy-binding>-->
+
+      <invoker-proxy-binding>
+        <name>stateless-test-invoker</name>
+        <invoker-mbean>jboss:service=invoker,type=unified</invoker-mbean>
+        <proxy-factory>org.jboss.proxy.ejb.ProxyFactory</proxy-factory>
+        <proxy-factory-config>
+          <client-interceptors>
+            <home>
+              <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+               <interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>
+              <!--<interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>-->
+              <!--<interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>-->
+            </home>
+            <bean>
+              <interceptor>org.jboss.proxy.ejb.StatelessSessionInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+              <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+               <interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>
+              <!--<interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>-->
+              <!--<interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>-->
+            </bean>
+          </client-interceptors>
+        </proxy-factory-config>
+      </invoker-proxy-binding>
+
+   </invoker-proxy-bindings>
+
+   <container-configurations>
+     <container-configuration extends="Standard Stateless SessionBean">
+        <container-name>Test Stateless SessionBean</container-name>
+        <invoker-proxy-binding-name>stateless-test-invoker</invoker-proxy-binding-name>
+     </container-configuration>
+   </container-configurations>
+
+
+</jboss>

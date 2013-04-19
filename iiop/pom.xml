@@ -1,0 +1,323 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-iiop</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server IIOP</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (iiop module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>idlj-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <compiler>jacorb</compiler>
+          <sourceDirectory>${project.basedir}/src/idl</sourceDirectory>
+          <sources>
+            <source>
+              <includes>
+                <include>TransactionService.idl</include>
+                <include>SASCurrent.idl</include>
+              </includes>
+              <emitStubs>true</emitStubs>
+              <emitSkeletons>true</emitSkeletons>
+            </source>
+          </sources>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.jacorb</groupId>
+            <artifactId>jacorb-idl-compiler</artifactId>
+            <version>2.3.0jboss.patch4-brew</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rmic-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rmi compile</id>
+            <goals>
+              <goal>rmic</goal>
+            </goals>
+            <configuration>
+              <iiop>true</iiop>
+              <includes>
+                <include>javax.ejb.EJBObject</include>
+                <include>javax.ejb.EJBHome</include>
+              </includes>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorSourceDirectory>src/assembly</descriptorSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>jacorb</groupId>
+      <artifactId>jacorb</artifactId>
+    </dependency>
+                                                        
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.jbossts</groupId>
+      <artifactId>jbossjts</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ant</groupId>
+          <artifactId>ant</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxb</groupId>
+          <artifactId>jaxb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.xml.soap</groupId>
+          <artifactId>saaj-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.xml.ws</groupId>
+          <artifactId>jaxws-api</artifactId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jbosssx</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jbosssx-client</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-classloading-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-corba-ots-spi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-transaction-spi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jca-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.ejb</groupId>
+      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-main</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnp-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-javaee</artifactId>
+        </exclusion>        
+      </exclusions>      
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-security</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-common</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>        
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>        
+      </exclusions>       
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-ear</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-ejb</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api_3.1</artifactId>
+        </exclusion>        
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>        
+      </exclusions>       
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-rar</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>        
+      </exclusions>       
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-war</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss.web</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>        
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>        
+      </exclusions>       
+    </dependency>
+    
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jboss-security-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx-client</artifactId>
+    </dependency>
+    
+  </dependencies>
+  
+</project>

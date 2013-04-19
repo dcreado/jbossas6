@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+    <!-- Deployers -->
+    <bean  name="org.jboss.switchboard.WebEnvironmentSwitchBoardDeployer" class="org.jboss.switchboard.mc.deployer.WebEnvironmentSwitchBoardDeployer">
+        <constructor><parameter class="org.jboss.reloaded.naming.deployers.javaee.JavaEEComponentInformer"><inject/></parameter></constructor>
+    </bean>
+    
+    <!--  Resource providers -->
+
+    <!--  processes env-entry resources (EE.5.4 of Java EE6 spec) -->
+    <bean name="org.jboss.switchboard.EnvEntryResourceProvider" class="org.jboss.switchboard.mc.resource.provider.EnvEntryResourceProvider"/>
+    
+    <!--  ResourceProvider for java:comp/ORB (EE.5.12 of Java EE6 spec) -->
+    <bean name="org.jboss.switchboard.ORBRefResourceProvider" class="org.jboss.as.switchboard.resource.provider.ORBRefResourceProvider">
+        <constructor>
+            <parameter class="java.lang.String"><value>java:/JBossCorbaORB</value></parameter>
+        </constructor>    
+    </bean>
+
+
+    <!--  processes resource-env-ref resources (EE.5.8 of Java EE6 spec) -->
+    <bean name="org.jboss.switchboard.ResourceEnvRefResourceProvider" class="org.jboss.switchboard.mc.resource.provider.ResourceEnvRefProvider">
+        <property name="typedResourceEnvRefResourceProviders">
+            <map keyClass="java.lang.String" valueClass="org.jboss.switchboard.mc.spi.MCBasedResourceProvider">
+                <entry>
+                    <key>javax.transaction.UserTransaction</key>
+                    <value>
+                        <bean name="org.jboss.switchboard.UserTransactionResEnvRefResourceProvider" class="org.jboss.as.switchboard.resource.provider.UserTransactionResourceEnvRefResourceProvider"/>
+                    </value>
+                </entry>
+                <entry>
+                    <key>org.omg.CORBA.ORB</key>
+                    <value>
+                            <!-- Resource provider for res-env-ref of type ORB -->
+                            <bean name="org.jboss.switchboard.ORBResourceEnvRefResourceProvider" class="org.jboss.as.switchboard.resource.provider.ORBResourceEnvRefResourceProvider">
+                                <constructor>
+                                    <parameter class="java.lang.String"><value>java:/JBossCorbaORB</value></parameter>
+                                </constructor>    
+                            </bean>
+                    </value>
+                </entry>
+            </map>           
+        </property>
+        
+    </bean>
+
+    <!--  processes resource-ref resources (EE.5.7 of Java EE6 spec) -->
+    <bean name="org.jboss.switchboard.ResourceRefResourceProvider" class="org.jboss.switchboard.mc.resource.provider.ResourceRefResourceProviderDelegator">
+        <property name="typedResourceRefResourceProviders">
+            <map keyClass="java.lang.String" valueClass="org.jboss.switchboard.mc.spi.MCBasedResourceProvider">
+                <entry>
+                    <key>java.net.URL</key>
+                    <value><bean name="org.jboss.switchboard.URLResourceProvider" class="org.jboss.switchboard.mc.resource.provider.URLResourceProvider"/></value>
+                </entry>
+                <entry>
+                    <key>org.omg.CORBA_2_3.ORB</key>
+                    <value>
+                        <!-- Resource provider for res-ref of type ORB -->
+                        <bean name="org.jboss.switchboard.ORBResourceRefResourceProvider" class="org.jboss.as.switchboard.resource.provider.ORBResourceRefResourceProvider">
+                            <constructor>
+                                <parameter class="java.lang.String"><value>java:/JBossCorbaORB</value></parameter>
+                            </constructor>    
+                        </bean>
+                    </value>
+                </entry>
+            </map>           
+        </property>
+    </bean>
+
+    <!--  ResourceProvider for java:comp/UserTransaction (EE.5.10 of Java EE 6 spec)
+-->
+    <bean name="org.jboss.switchboard.UserTransactionRefResourceProvider" class="org.jboss.as.switchboard.resource.provider.UserTransactionRefResourceProvider"/>
+
+    
+    
+    <!-- Resource provider registry -->
+    <bean name="org.jboss.switchboard.ResourceProviderRegistry" class="org.jboss.switchboard.mc.resource.provider.ResourceProviderRegistry">
+        <property name="resourceProviders">
+            <list>
+                <inject bean="org.jboss.switchboard.EnvEntryResourceProvider"/>
+                <inject bean="org.jboss.switchboard.ResourceEnvRefResourceProvider"/>
+                <inject bean="org.jboss.switchboard.ResourceRefResourceProvider"/>
+                <inject bean="org.jboss.switchboard.ORBRefResourceProvider"/>                
+                <inject bean="org.jboss.switchboard.UserTransactionRefResourceProvider"/>
+            </list>
+        </property>
+
+    </bean>
+    
+    <!--  JNDI environment processor -->
+    <bean name="org.jboss.switchboard.JndiEnvironmentProcessor" class="org.jboss.switchboard.mc.JndiEnvironmentProcessor">
+        <constructor><parameter><inject bean="org.jboss.switchboard.ResourceProviderRegistry"/></parameter></constructor>
+    </bean>
+    
+    
+</deployment>

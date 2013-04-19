@@ -1,0 +1,563 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-ejb3</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server EJB3</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (ejb3 module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- Exclude all test sources until they are fixed. -->
+          <testExcludes>
+            <testExclude>**/*</testExclude>
+          </testExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorSourceDirectory>src/assembly</descriptorSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <mkdir dir="target/resources"/>
+                <copy todir="target/resources" filtering="yes">
+                  <fileset dir="src/resources">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                <unjar src="${maven.dependency.org.jboss.ejb3.jboss-ejb3-core.jar.path}" dest="target/resources">
+                  <patternset>
+                    <include name="*.xml" />
+                    <include name="META-INF/ejb3-deployers-jboss-beans.xml" />
+		    		<exclude name="META-INF/jpa-deployers-jboss-beans.xml" />
+                    <include name="META-INF/*.properties" />
+                  </patternset>
+                </unjar>
+                
+                <!-- JBAS-4850 -->
+				<replace file="target/resources/ejb3-connectors-jboss-beans.xml" token="jboss.bind.address" value="hostforurl"/>
+		
+				<mkdir dir="target/resources/deployers"/>
+				<unjar src="${maven.dependency.org.jboss.ejb3.jboss-ejb3-deployers.jar.path}" dest="target/resources/deployers">
+			<patternset>
+				<include name="META-INF/ejb3-deployers-jboss-beans.xml" />
+			</patternset>
+		</unjar>
+		<unjar src="${maven.dependency.org.jboss.ejb3.nointerface.jboss-ejb3-nointerface-impl.jar.path}" dest="target/resources">
+			<patternset>
+				<include name="META-INF/ejb3-nointerface-jboss-beans.xml" />
+			</patternset>
+		</unjar>
+		<unjar src="${maven.dependency.org.jboss.ejb3.jboss-ejb3-metadata-deployers.jar.path}" dest="target/resources">
+			<patternset>
+				<include name="META-INF/ejb3-metadata-deployers-jboss-beans.xml" />
+			</patternset>
+		</unjar>
+		<unjar src="${maven.dependency.org.jboss.ejb3.instantiator.jboss-ejb3-instantiator-impl.jar.path}" dest="target/resources">
+			<patternset>
+				<include name="META-INF/ejb3-bean-instantiator-jboss-beans.xml" />
+			</patternset>
+		</unjar>
+        <unjar src="${maven.dependency.org.jboss.ejb3.singleton.jboss-ejb3-singleton-deployer.jar.path}" dest="target/resources">
+			<patternset>
+				<include name="META-INF/jboss-ejb3-singleton-deployer-jboss-beans.xml" />
+			</patternset>
+		</unjar>
+        <unjar src="${maven.dependency.org.jboss.ejb3.singleton.jboss-ejb3-singleton-aop-impl.jar.path}" dest="target/resources">
+			<patternset>
+				<include name="META-INF/singleton-container-aop.xml" />
+			</patternset>
+		</unjar>
+
+
+                <mkdir dir="target/ejb3.deployer"/>
+                <copy todir="target/ejb3.deployer">
+                   <fileset dir="target">
+                      <include name="jboss-as-ejb3-deployer.jar"/>
+                   </fileset>
+                   <fileset dir="target/resources">
+                      <include name="META-INF/ejb3-as-deployers-jboss-beans.xml"/>
+                      <include name="META-INF/ejb3-cache-factory-registry-jboss-beans.xml"/>
+                      <include name="META-INF/jpa-deployers-jboss-beans.xml"/>
+                      
+                   </fileset>
+		   <fileset dir="target/resources">
+			   <!-- the one from ejb3-core/META-INF -->
+			   <include name="META-INF/ejb3-deployers-jboss-beans.xml"/>
+		   </fileset>
+                   <fileset dir="target/resources">
+                      <include name="META-INF/persistence.properties"/>
+                   </fileset>
+                </copy>
+                
+                <copy todir="target">
+                   <fileset dir="target/resources">
+                      <include name="ejb3-container-jboss-beans.xml"/>
+                      <include name="ejb3-connectors-jboss-beans.xml"/>
+                      <include name="ejb3-interceptors-aop.xml"/>
+                   </fileset>
+		   <fileset dir="target/resources/META-INF">
+			   <include name="ejb3-nointerface-jboss-beans.xml" />
+			   <include name="ejb3-metadata-deployers-jboss-beans.xml" />
+			   <include name="jboss-ejb3-singleton-deployer-jboss-beans.xml" />
+			   <include name="ejb3-bean-instantiator-jboss-beans.xml" />
+		   </fileset>
+		   <fileset dir="target/resources/deployers/META-INF">
+			   <include name="ejb3-deployers-jboss-beans.xml" />
+		   </fileset>
+
+                </copy>
+                
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>cglib</groupId>
+      <artifactId>cglib</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>jacorb</groupId>
+      <artifactId>jacorb</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.remoting</groupId>
+      <artifactId>jboss-remoting</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.ejb3.sis</groupId>
+      <artifactId>jboss-ejb3-sis</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-vfs</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+         <exclusion>
+           <groupId>org.jboss.logging</groupId>
+           <artifactId>jboss-logging-spi</artifactId>
+         </exclusion>
+        </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.ejb3.depchain</groupId>
+      <artifactId>jboss-ejb3-depchain-as6</artifactId>
+      <version>${version.org.jboss.ejb3.depchain}</version>
+      <exclusions>
+        <!-- JBAS-679, may be removed when as-int is >= 1.1.5 -->
+        <exclusion>
+          <groupId>org.jboss.ejb3</groupId>
+          <artifactId>jboss-ejb3-proxy</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId> org.jboss.microcontainer</groupId>
+          <artifactId>jboss-aop-mc-int</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.reloaded</groupId>
+          <artifactId>jboss-reloaded-naming</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.reloaded</groupId>
+          <artifactId>jboss-reloaded-naming-deployers</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.metadata</groupId>
+          <artifactId>jboss-metadata</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jacc-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api_3.1</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.microcontainer</groupId>
+          <artifactId>jboss-dependency</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.microcontainer</groupId>
+          <artifactId>jboss-kernel</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jaspi-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jca-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>apache-log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <!-- Only bring in timeout-3.1 -->
+        <exclusion>
+          <groupId>org.jboss.ejb3.timeout</groupId>
+          <artifactId>jboss-ejb3-timeout-3.0</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>quartz</groupId>
+          <artifactId>quartz</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jsr181-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jaxws-api</artifactId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jbosssx</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jboss-security-spi</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+      </exclusions>
+      <type>pom</type>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.ejb3</groupId>
+      <artifactId>jboss-ejb3-core</artifactId>
+      <classifier>client</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>apache-xerces</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.microcontainer</groupId>
+          <artifactId>jboss-dependency</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jaspi-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jca-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jacc-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.metadata</groupId>
+          <artifactId>jboss-metadata</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jsr181-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>quartz</groupId>
+          <artifactId>quartz</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jaxws-api</artifactId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jbosssx</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jboss-security-spi</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.ejb3.vfs</groupId>
+      <artifactId>jboss-ejb3-vfs-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.ejb3.vfs</groupId>
+      <artifactId>jboss-ejb3-vfs-impl-vfs3</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss</groupId>
+          <artifactId>jboss-vfs</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.ejb3.timeout</groupId>
+      <artifactId>jboss-ejb3-timeout-3.1</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api_3.1</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- for debugging -->
+    <dependency>
+      <groupId>org.jboss.ejb3.tx2</groupId>
+      <artifactId>jboss-ejb3-tx2-aop</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.ejb</groupId>
+      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_1.1_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-connector</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.microcontainer</groupId>
+          <artifactId>jboss-dependency</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-iiop</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnp-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-core-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-structure-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-vfs-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.kernel</groupId>
+      <artifactId>jboss-kernel</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-corba-ots-spi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.reloaded.naming</groupId>
+      <artifactId>jboss-reloaded-naming-deployers</artifactId>
+    </dependency>
+  </dependencies>
+  
+</project>

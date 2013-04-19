@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+
+   <!-- ==================================================================== -->
+   <!-- UnifiedInvoker variant that uses compression                         -->
+   <!-- ==================================================================== -->
+   
+   <!-- Unified invoker.  Registers itself as an invocation handler with UnifiedInvokerConnector. -->
+   <!-- Can find more details on unified invoker configuration at                                 -->
+   <!-- http://docs.jboss.org/jbossas/unified_invoker/UnifiedInvoker_guide.html.                  -->
+   <bean name="CompressingInvoker" class="org.jboss.invocation.unified.server.UnifiedInvoker">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=invoker,type=compression",exposedInterface=org.jboss.invocation.unified.server.UnifiedInvokerMBean.class,registerDirectly=true)</annotation>
+      <property name="connector"><inject bean="ComrpressionInvokerConnector"/></property>
+      <depends>TransactionManager</depends>
+   </bean>
+   
+   
+   <bean name="ComrpressionInvokerConnector" class="org.jboss.remoting.transport.Connector">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.remoting:service=Connector,transport=socket,compression=true",exposedInterface=org.jboss.remoting.transport.ConnectorMBean.class,registerDirectly=true)</annotation>
+      <property name="serverConfiguration"><inject bean="CompressionInvokerConfiguration"/></property>
+   </bean>
+   
+   
+   <!-- Remoting server configuration -->
+   <bean name="CompressionInvokerConfiguration" class="org.jboss.remoting.ServerConfiguration">
+      <constructor>
+         <!-- transport: Others include sslsocket, bisocket, sslbisocket, http, https, rmi, sslrmi, servlet, sslservlet. -->
+         <parameter>socket</parameter>
+      </constructor>
+   
+      <!-- Parameters visible to both client and server -->
+      <property name="invokerLocatorParameters">
+         <map keyClass="java.lang.String" valueClass="java.lang.String">
+            <entry>
+               <key>serverBindAddress</key>
+               <value>${jboss.bind.address}</value>
+            </entry>
+            <entry>
+               <key>serverBindPort</key>
+               <value>24446</value>
+            </entry>
+
+            <entry><key>dataType</key>     <value>invocation</value></entry>
+            <entry><key>marshaller</key>   <value>org.jboss.test.invokers.ejb.CompressingInvocationMarshaller</value></entry>
+            <entry><key>unmarshaller</key> <value>org.jboss.test.invokers.ejb.CompressingInvocationUnMarshaller</value></entry>
+           
+            <!-- A socket transport parameter -->
+            <entry><key>enableTcpNoDelay</key> <value>true</value></entry>
+         </map>
+      </property>
+     
+      <!-- Parameters visible only to server -->
+      <property name="serverParameters">
+         <map keyClass="java.lang.String" valueClass="java.lang.String">
+       
+            <!-- Selected optional parameters: -->
+         
+            <!-- Maximum number of worker threads on the      -->
+            <!-- server (socket transport).  Defaults to 300. -->
+            <!--entry><key>maxPoolSize</key> <value>500</value></entry-->
+            
+            <!-- Number of seconds after which an idle worker thread will be    -->
+            <!-- purged (socket transport).  By default purging is not enabled. -->
+            <!--entry><key>idleTimeout</key> <value>60</value></entry-->
+         </map>
+      </property>
+                                
+      <property name="invocationHandlers">
+         <map keyClass="java.lang.String" valueClass="java.lang.String">
+            <!-- The JSR88 deployment service StreamingTarget handler -->
+            <entry><key>JSR88</key> <value>org.jboss.deployment.remoting.DeployHandler</value></entry>
+         </map>
+      </property>
+   </bean>
+   
+</deployment>

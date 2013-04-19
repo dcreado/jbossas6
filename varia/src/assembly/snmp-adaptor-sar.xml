@@ -1,0 +1,20 @@
+<assembly>
+  <id>snmp-adaptor-sar</id>
+  <formats>
+    <format>sar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>jboss-as-varia-snmp-adaptor.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>target/resources/services/snmp/deploy</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>

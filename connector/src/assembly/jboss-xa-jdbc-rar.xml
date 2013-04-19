@@ -1,0 +1,20 @@
+<assembly>
+  <id>jboss-xa-jdbc-rar</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/xa-rar</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>target/jboss-as-connector-jboss-xa-jdbc.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>jboss-xa-jdbc.jar</destName>
+    </file>
+  </files>
+</assembly>

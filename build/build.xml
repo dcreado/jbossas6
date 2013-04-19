@@ -1,0 +1,2650 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== -->
+<!--                                                                        -->
+<!--  JBoss, the OpenSource J2EE webOS                                      -->
+<!--                                                                        -->
+<!--  Distributable under LGPL license.                                     -->
+<!--  See terms of license at http://www.gnu.org.                           -->
+<!--                                                                        -->
+<!-- ====================================================================== -->
+
+<!-- $Id: build.xml 112094 2011-08-18 20:45:19Z thauser@redhat.com $ -->
+
+<project default="main" name="JBoss Distribution Build" xmlns:maven="antlib:org.apache.maven.artifact.ant">
+
+  <!-- ================================================================== -->
+  <!-- Setup                                                              -->
+  <!-- ================================================================== -->
+
+  <!-- ================================================================== -->
+  <!-- Initialization                                                     -->
+  <!-- ================================================================== -->
+
+  <target name="init">
+    
+    <!-- ================================================================== -->
+    <!-- Init the maven ant tasks -->
+    <!-- ================================================================== -->
+
+    <path id="maven-ant-tasks.classpath" path="../tools/maven/ant-tasks/maven-ant-tasks-2.1.0.jar" />
+    <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+             uri="antlib:org.apache.maven.artifact.ant"
+             classpathref="maven-ant-tasks.classpath" />
+
+  </target>
+
+
+  <target name="init-dependencies" depends="init"
+          description="Initialize dependency configuration">
+    
+    <!-- Set a default file to use to define the thirdparty dependencies. -->
+    <property name="dist.pom.file" location="pom.xml"/>
+    
+    <!-- 
+      -  Initialize properties for each dependency in the thirdparty pom 
+      -  The properties take the form "groupId:artifactId:packaging"
+      -->
+    <!--<maven:pom id="pom.project" file="pom.xml"/>
+    <maven:dependencies filesetId="pom.dependencies"
+                        versionsId="pom.dependencies.versions"
+                        scopes="compile, runtime">
+      <pom refid="pom.project"/>
+    </maven:dependencies>
+
+    <mapper id="remove-versions" classpathref="maven-ant-tasks.classpath"
+              classname="org.apache.maven.artifact.ant.VersionMapper"
+              from="${pom.dependencies.versions}" to="flatten" />-->
+
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Configuration                                                      -->
+  <!-- ================================================================== -->
+
+  <target name="configure" depends="init-dependencies">
+
+    <!-- =================== -->
+    <!-- Basic Configuration -->
+    <!-- =================== -->
+
+    <dirname property="project.root" file="${basedir}"/>
+    <property name="project.build" value="${project.root}/build"/>
+    <property name="project.tools" value="${project.root}/tools"/>
+    
+    <!-- Setup the build timestamp & build identifer properties -->
+    <!--<tstamp>
+      <format property="build.number" pattern="yyyyMMddHHmm"/>
+      <format property="YEAR" pattern="yyyy"/>
+    </tstamp>
+    <property name="build.id" value="${build.number}"/>-->
+
+    <!-- Module name(s) & version -->
+    <property name="dist.module.name" value="jboss"/>
+    <property name="dist.module.version" value="${project.version}"/>
+    <property name="dist.module.output" value="${basedir}/target"/>
+
+    <!-- Install/Release structure -->
+    <property name="install.id" value="${dist.module.name}-${dist.module.version}"/>
+    <property name="release.id" value="${install.id}"/>
+
+    <property name="install.root" value="${dist.module.output}/${install.id}"/>
+
+    <property name="install.docs" value="${install.root}/docs"/>
+    <property name="install.api" value="${install.docs}/api"/>
+    <property name="install.jmx-api" value="${install.docs}/jmx-api"/>
+    <property name="install.todo" value="${install.docs}/todo"/>
+    <property name="install.examples" value="${install.docs}/examples"/>
+    <property name="install.examples.jca" value="${install.docs}/examples/jca"/>
+    <property name="install.examples.jms" value="${install.docs}/examples/jms"/>
+    <property name="install.examples.jbossweb" value="${install.examples}/jbossweb"/>
+    <property name="install.examples.netboot" value="${install.examples}/netboot"/>
+    <!--<property name="install.examples.binding-manager" value="${install.examples}/binding-manager"/>-->
+    <property name="install.examples.varia" value="${install.examples}/varia"/>
+    <property name="install.dtd" value="${install.docs}/dtd"/>
+    <property name="install.schema" value="${install.docs}/schema"/>
+
+    <property name="install.bin" value="${install.root}/bin"/>
+    <property name="install.native.linux.32" value="${install.bin}/native/lib"/>
+    <property name="install.native.linux.64" value="${install.bin}/native/lib64"/>
+    <property name="install.etc" value="${install.root}/etc"/>
+    <property name="install.client" value="${install.root}/client"/>
+    <property name="install.lib" value="${install.root}/lib"/>
+
+    <property name="install.server" value="${install.root}/server"/>
+    <property name="install.all" value="${install.server}/all"/>
+    <property name="install.all.lib" value="${install.all}/lib"/>
+    <property name="install.all.deploy" value="${install.all}/deploy"/>
+    <property name="install.all.deployers" value="${install.all}/deployers"/>
+    <property name="install.all.conf" value="${install.all}/conf"/>
+    <property name="install.all.deploy.hasingleton" value="${install.all}/deploy-hasingleton"/>
+
+    <property name="install.default" value="${install.server}/default"/>
+    <property name="install.default.lib" value="${install.default}/lib"/>
+    <property name="install.default.deploy" value="${install.default}/deploy"/>
+    <property name="install.default.deployers" value="${install.default}/deployers"/>
+    <property name="install.default.conf" value="${install.default}/conf"/>
+
+    <property name="install.minimal" value="${install.server}/minimal"/>
+    <property name="install.minimal.lib" value="${install.minimal}/lib"/>
+    <property name="install.minimal.deploy" value="${install.minimal}/deploy"/>
+    <property name="install.minimal.deployers" value="${install.minimal}/deployers"/>
+    <property name="install.minimal.conf" value="${install.minimal}/conf"/>
+
+    <property name="install.jbossweb" value="${install.server}/jbossweb-standalone"/>
+    <property name="install.jbossweb.lib" value="${install.jbossweb}/lib"/>
+    <property name="install.jbossweb.deploy" value="${install.jbossweb}/deploy"/>
+    <property name="install.jbossweb.deployers" value="${install.jbossweb}/deployers"/>
+    <property name="install.jbossweb.conf" value="${install.jbossweb}/conf"/>
+
+    <property name="install.standard" value="${install.server}/standard"/>
+    <property name="install.standard.lib" value="${install.standard}/lib"/>
+    <property name="install.standard.deploy" value="${install.standard}/deploy"/>
+    <property name="install.standard.deployers" value="${install.standard}/deployers"/>
+    <property name="install.standard.conf" value="${install.standard}/conf"/>
+
+    <!-- libs shared by the server configurations -->
+    <property name="install.common" value="${install.root}/common"/>
+    <property name="install.common.lib" value="${install.common}/lib"/>
+    <property name="install.common.deploy" value="${install.common}/deploy"/>
+
+    <!-- Configuration for the nightly build and test job -->
+    <property name="run.nightly.sleep" value="1"/>
+    <!-- 1 minute -->
+    <property name="run.nightly.email.tolist" value="jboss-development@lists.sourceforge.net"/>
+    <property name="run.nightly.email.from" value="noreply@jboss.org"/>
+    <property name="run.nightly.email.mailhost" value="localhost"/>
+    <property name="run.home.dir" value="${dist.module.output}/${release.id}" />
+    <property name="run.bin.dir" value="${run.home.dir}/bin" />
+
+    <!-- Bits for building source archives -->
+    <patternset id="source.ignore">
+      <exclude name="**/output/**"/>
+      <exclude name="**/CVS/**" />
+    </patternset>
+    <patternset id="source.free">
+      <exclude name="tools/**"/>
+      <exclude name="thirdparty/**"/>
+      <include name="**"/>
+    </patternset>
+    <patternset id="source.external">
+      <include name="tools/**"/>
+      <include name="thirdparty/**"/>
+    </patternset>
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Install & Release                                                  -->
+  <!-- ================================================================== -->
+
+  <target name="install-modules" description="Install each app server module to the distribution"
+          depends="init-dependencies,
+                   module-main,
+                   module-system,
+                   module-system-jmx,
+                   module-security,
+                   module-server,
+                   module-deployment,
+                   module-jbossas-remoting,
+                   module-cluster,
+                   module-varia,
+                   module-iiop,
+                   module-aspects,
+                   module-profileservice,
+                   module-connector,
+                   module-management,
+                   module-ejb3,
+                   module-tomcat,
+                   module-webservices,
+                   module-resteasy,
+                   module-hibernate-int,
+                   module-hornetq-int,
+                   module-console,
+      				module-managed-beans">
+  </target>
+  
+  <target name="install" depends="partition-build, jboss-all-client"
+          description="Install the structure for a release.">
+  </target>
+
+  <!-- Partition the default single configuration build into a minimal,
+  default and all configs with a minimal set of jars in the root lib dir.
+  -->
+  <target name="partition-build" depends="init">
+
+    <!-- Copy server/all to server/default and then remove the services 
+         outside of the scope of the default config
+    -->
+    <copy todir="${install.default}">
+      <fileset dir="${install.all}">
+        <exclude name="data/**"/>
+        <exclude name="deploy-hasingleton/**"/>
+        <exclude name="farm/**"/>
+        <exclude name="lib/**"/>
+        <exclude name="log/**"/>
+        <exclude name="tmp/**"/>
+        <exclude name="work/**"/>
+        <exclude name="conf/jacorb.properties"/>
+        <exclude name="deployers/clustering-deployer-jboss-beans.xml"/>
+        <exclude name="deploy/cluster/**"/>
+        <exclude name="deploy/deploy.last/**"/>
+        <exclude name="deploy/httpha-invoker.sar/**"/>
+        <exclude name="deploy/iiop-jboss-beans.xml"/>
+        <exclude name="deploy/juddi-service.sar/**"/>
+        <exclude name="deploy/hornetq/**"/>
+        <exclude name="deploy/snmp-adaptor.sar/**"/>
+      </fileset>
+    </copy>
+    <!-- leave the empty default/lib directory there -->
+    <mkdir dir="${install.default.lib}"/>
+
+    <copy todir="${install.default.conf}" overwrite="true">
+      <fileset dir="${project.root}/server/target/etc/conf/default"/>
+    </copy>
+
+    <!-- Use clustered mod_cluster service in all -->
+  	<delete file="${install.all}/deploy/mod_cluster.sar/META-INF/mod_cluster-local-jboss-beans.xml"/>
+    <!-- Use non-clustered mod_cluster service in default -->
+  	<delete file="${install.default}/deploy/mod_cluster.sar/META-INF/mod_cluster-ha-jboss-beans.xml"/>
+
+    <copy tofile="${install.default}/deployers/clustering-deployer-jboss-beans.xml"
+          file="${project.root}/cluster/target/etc/clustering-deployer-jboss-beans-non-clustered.xml"/>
+
+  	<copy todir="${install.all}/deployers/ejb3.deployer/META-INF" overwrite="true">
+  	  <fileset dir="${project.root}/cluster/target/etc">
+  	  	<include name="ejb3-cache-factory-registry-jboss-beans.xml"/>
+      </fileset>
+  	</copy>
+  	
+    <!-- Build server/minimal manually -->
+    <mkdir dir="${install.minimal.deploy}"/>
+    <mkdir dir="${install.minimal.deployers}"/>
+    <copy todir="${install.minimal.conf}">
+      <fileset dir="${install.default.conf}">
+        <include name="jndi.properties"/>
+        <include name="jboss-log4j.xml"/>
+        <include name="bootstrap/stdio.xml"/>
+        <include name="bootstrap/classloader.xml"/>
+        <include name="bootstrap/aop.xml"/>
+        <include name="bootstrap/jmx.xml"/>
+        <include name="bootstrap/deployers.xml"/>
+        <include name="bootstrap/profile.xml"/>
+        <include name="bootstrap/security.xml"/>
+        <include name="xmdesc/NamingBean-xmbean.xml"/>
+        <include name="xmdesc/NamingService-xmbean.xml"/>
+        <include name="xmdesc/NamingProviderURLWriter-xmbean.xml"/>
+        <include name="xmdesc/Log4jService-xmbean.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.minimal.deployers}" overwrite="true">
+       <fileset dir="${install.default.deployers}">
+          <include name="jboss-threads.deployer/**"/>
+          <include name="jboss-logging.deployer/**"/>
+       </fileset>
+    </copy>
+    <copy todir="${install.minimal.deploy}" overwrite="true">
+       <fileset dir="${install.default.deploy}">
+           <include name="thread-pool-jboss-beans.xml"/>
+           <include name="jboss-logging.xml"/>
+           <include name="hdscanner-jboss-beans.xml"/>
+       </fileset>
+    </copy>
+    <copy todir="${install.minimal.conf}" overwrite="true">
+      <fileset dir="${project.root}/server/target/etc/conf/minimal" />
+    </copy>
+    <copy file="${project.root}/profileservice/target/resources/hdscanner-jboss-beans.xml" 
+          todir="${install.minimal.deploy}" overwrite="true"/>
+    <copy todir="${install.minimal.lib}" overwrite="true">
+      <fileset dir="${install.common.lib}">
+        <include name="jnpserver.jar" />
+        <include name="log4j.jar" />
+        <include name="jboss-logmanager-log4j.jar" />
+        <include name="jboss-threads.jar" />
+      </fileset>
+    </copy>
+    <copy file="${project.root}/server/target/jboss-as-server-jboss-minimal.jar"
+          tofile="${install.minimal.lib}/jboss-minimal.jar"/>
+
+    <!-- Build server/web manually -->
+    <mkdir dir="${install.jbossweb}"/>
+    <mkdir dir="${install.jbossweb.lib}"/>
+    <!-- empty -->
+    <copy todir="${install.jbossweb.conf}">
+      <fileset dir="${install.default.conf}">
+        <include name="**"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deployers}">
+      <fileset dir="${install.default.deployers}">
+        <include name="alias-deployers-jboss-beans.xml"/>
+        <include name="core-naming-jboss-beans.xml"/>
+        <include name="jbossweb.deployer/**"/>
+        <include name="metadata-deployer-jboss-beans.xml"/>
+        <include name="security-deployer-jboss-beans.xml"/>
+		<include name="jboss-threads.deployer/**"/>
+        <include name="jboss-logging.deployer/**"/>
+        <exclude name="jbossweb.deployer/META-INF/war-deployers-jboss-beans.xml"/>
+        <exclude name="switchboard-jboss-beans.xml"/>  
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deployers}">
+      <fileset dir="${tomcat.module.output}/resources/standalone">
+        <include name="scanning-deployers-jboss-beans.xml"/>
+        <include name="switchboard-jboss-beans.xml"/>          
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deployers}/jbossweb.deployer/META-INF">
+      <fileset dir="${tomcat.module.output}/resources/standalone">
+        <include name="war-deployers-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deploy}">
+      <fileset dir="${install.default.deploy}">
+      	<include name="jboss-logging.xml"/>
+        <include name="jbossweb.sar/**"/>
+        <include name="jmx-console-activator-jboss-beans.xml"/>
+        <include name="ROOT.war/**"/>
+        <include name="security/**"/>
+        <include name="thread-pool-jboss-beans.xml"/>
+        <include name="legacy-conf-service.xml"/>
+        <include name="jmx-jboss-beans.xml"/>
+        <exclude name="jbossweb.sar/jstl.jar"/>
+        <exclude name="jbossweb.sar/META-INF/jboss-structure.xml"/>
+        <exclude name="jbossweb.sar/META-INF/jboss-beans.xml"/>
+        <exclude name="jbossweb.sar/catalina.properties"/>
+        <exclude name="jbossweb.sar/context.xml"/>
+        <exclude name="jbossweb.sar/server.xml"/>
+        <exclude name="jbossweb.sar/web.xml"/>
+      </fileset>
+      <fileset dir="${project.root}/profileservice/target/resources/">
+        <include name="hdscanner-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deploy}/jbossweb.sar/META-INF">
+      <fileset dir="${tomcat.module.output}/resources">
+        <include name="jboss-structure.xml"/>
+      </fileset>
+      <fileset dir="${tomcat.module.output}/resources/standalone">
+        <include name="jboss-beans.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.jbossweb.deploy}/jbossweb.sar">
+      <fileset dir="${tomcat.module.output}/resources/standalone">
+        <include name="catalina.properties"/>
+        <include name="context.xml"/>
+        <include name="server.xml"/>
+        <include name="web.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Build standard config manually -->
+    <copy todir="${install.standard}">
+      <fileset dir="${install.default}">
+        <include name="conf/**"/>
+        <exclude name="conf/jboss-service.xml"/>
+        <!-- call-by-value for jndi -->
+        <exclude name="conf/jndi.properties"/>
+        <!-- ORBInitialContextFactory -->
+        <include name="deploy/**"/>
+        <!--<exclude name="deploy/admin-console-activator-jboss-beans.xml"/>-->
+        <exclude name="deploy/http-invoker.sar/**"/>
+        <exclude name="deploy/jmx-remoting.sar/**"/>
+        <exclude name="deploy/management/**"/>
+        <exclude name="deploy/cache-invalidation-service.xml"/>
+        <exclude name="deploy/mail-ra.rar"/>
+        <exclude name="deploy/monitoring-service.xml"/>
+		<!-- Exclude naming-jboss-beans.xml, so that we can explicitly
+			use server/src/etc/conf/standard/naming-jboss-beans.xml with
+			callByValue set to true -->          
+		<exclude name="deploy/naming-jboss-beans.xml"/>          
+        <exclude name="deploy/properties-service.xml"/>
+        <exclude name="deploy/quartz-ra.rar"/>
+        <exclude name="deploy/schedule-manager-service.xml"/>
+        <exclude name="deploy/scheduler-service.xml"/>
+        <exclude name="deploy/sqlexception-service.xml"/>
+        <exclude name="deploy/vfs-jboss-beans.xml"/>
+        <include name="deployers/**"/>
+        <!-- call-by-value & isolation -->
+        <exclude name="deployers/ear-deployer-jboss-beans.xml"/>
+		<!-- Disable system property replacement in Java EE xml files -->          	
+		<exclude name="deployers/metadata-deployer-jboss-beans.xml"/>          
+		<!-- Exclude war-deployers-jboss-beans.xml so that we can use a custom MergedJBossWebMetaDataDeployer for standard profile -->          	
+		<exclude name="deployers/jbossweb.deployer/META-INF/war-deployers-jboss-beans.xml"/>          
+      </fileset>
+      <fileset dir="${install.all}">
+        <include name="conf/jacorb.properties"/>
+        <include name="deploy/juddi-service.sar/**"/>
+        <include name="deploy/iiop-jboss-beans.xml"/>
+        <include name="lib/jacorb.jar"/>
+      </fileset>
+    </copy>
+    <!-- install descriptor overrides -->
+    <copy todir="${install.standard.conf}">
+      <fileset dir="${project.root}/server/target/etc/conf/standard">
+        <include name="jboss-service.xml"/>
+        <include name="jndi.properties"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.standard.deployers}">
+      <fileset dir="${project.root}/server/target/etc/conf/standard">
+        <include name="ear-deployer-jboss-beans.xml"/>
+		<include name="metadata-deployer-jboss-beans.xml"/>          
+      </fileset>
+    </copy>
+
+	<copy todir="${install.standard.deploy}">
+		<fileset dir="${project.root}/server/src/etc/conf/standard">
+		    <!-- callByValue, in naming, is set to true for "standard" profile -->
+	    	<include name="naming-jboss-beans.xml"/>
+	    </fileset>
+	</copy>      
+
+    <!-- TODO: temporarily override ejb3-deployers-jboss-beans.xml -->
+    <copy todir="${install.standard.deployers}" overwrite="true">
+      <fileset dir="${project.root}/ejb3/src/resources/standard">
+        <include name="ejb3-deployers-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <!--  override jpa-deployers-jboss-beans.xml for generator strategy compliance -->
+    <copy todir="${install.standard.deployers}/ejb3.deployer/META-INF" overwrite="true">
+      <fileset dir="${project.root}/ejb3/src/resources/standard">
+        <include name="jpa-deployers-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <!--  override war-deployers-jboss-beans.xml for a custom merged JBossWebMetadata deployer -->
+    <copy todir="${install.standard.deployers}/jbossweb.deployer/META-INF" overwrite="true">
+      <fileset dir="${project.root}/tomcat/src/resources/standard">
+        <include name="war-deployers-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+    
+    <copy todir="${install.root}">
+      <fileset dir="${project.build}/docs"/>
+    </copy>
+  </target>
+
+  <target name="jboss-all-client" depends="configure"
+      description="Create jar containing client app classpath">
+
+    <property name="jbossall.client.filename" value="jbossall-client.jar"/>
+    
+    <fileset id="client.jar.fileset" dir="${install.client}">
+      <!-- client excludes -->
+      <exclude name="jbossws-native-client.jar"/>
+      <exclude name="${jbossall.client.filename}"/>
+    </fileset>
+
+    <path id="client.jar.classpath">
+      <fileset refid="client.jar.fileset" />
+    </path>
+
+    <pathconvert property="client.jar.manifest.classpath" refid="client.jar.classpath"
+                 pathsep=" " dirsep="${file.separator}">
+      <map from="${install.client}${file.separator}" to="" />
+    </pathconvert>
+
+    <pathconvert property="client.jar.files" refid="client.jar.classpath" 
+                 pathsep="${line.separator}"  dirsep="${file.separator}">
+      <map from="${install.client}${file.separator}" to="" />
+    </pathconvert>
+
+    <mkdir dir="${dist.module.output}/temp"/>
+    <echo file="${dist.module.output}/temp/readme.txt">
+This jar file contains a classpath reference to various client jar files used by jboss client applications.
+Each of the jar files in the following list must available in the same directory as the jbossall-client.jar,  Otherwise they will not be found by the classloader.
+
+The classpath includes the following files:
+
+${client.jar.files}
+    </echo>
+
+    <jar destfile="${install.client}/${jbossall.client.filename}" basedir="${dist.module.output}/temp">
+      <manifest>
+        <attribute name="Specification-Title" value="${project.name}"/>
+        <attribute name="Specification-Version" value="${project.version}"/>
+        <attribute name="Specification-Vendor" value="${project.organization.name}"/>
+        <attribute name="Implementation-Title" value="${project.name}"/>
+        <attribute name="Implementation-Version" value="${project.version}"/>
+        <attribute name="Implementation-Vendor" value="${project.organization.name}"/>
+        <attribute name="Implementation-Vendor-Id" value="${project.groupId}"/>
+        <attribute name="Class-Path" value="${client.jar.manifest.classpath}"/>
+      </manifest>
+    </jar>
+
+    <delete dir="${dist.module.output}/temp" />
+
+  </target>
+
+  <!-- ================================================================== -->
+  <!-- Cleaning                                                           -->
+  <!-- ================================================================== -->
+
+  <!-- Clean up dist build output -->
+  <target name="clean" description="Cleans up most generated files."
+          depends="clean-dist">
+  </target>
+
+  <!-- Clean up all modules build output -->
+  <target name="clean-all-modules" description="Cleans up most generated files."
+          depends="clean-dist, maven-clean">
+  </target>
+
+  <!-- Clean up dist build output -->
+  <target name="clean-dist" depends="configure"
+          description="Cleans up distribution build.">
+    <delete dir="${dist.module.output}" failonerror="false"/>
+  </target>
+  
+  <!-- Clean up all generated files -->
+  <target name="clobber" depends="maven-clean"
+      description="Cleans up all generated files.">
+    <delete file="${module.root}/*_run.log"/>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Misc.                                                              -->
+  <!-- ================================================================== -->
+
+  <target name="main" depends="maven-install, dist"
+      description="Executes the default target to build the full dist."/>
+
+  <!--<target name="all" depends="maven-install, modules-all, install"
+      description="Executes all modules and builds everything."/>-->
+
+  <target name="dist" depends="init, configure, install-modules, thirdparty, install"
+      description="Executes all modules and builds most everything."/>
+
+  <target name="release" depends="dist" />
+
+  <!--<target name="help" depends="_buildmagic:help:build"
+          description="Show this help message."/>-->
+
+  <!-- Define a macro for calling maven -->
+  <macrodef name="maven">
+    <attribute name="options" default="" />
+    <attribute name="goal" />
+    <attribute name="basedir" />
+    <attribute name="resultproperty" default="maven.result" />
+    <element name="args" implicit="true" optional="true" />
+    <sequential>
+      <java classname="org.codehaus.classworlds.Launcher" fork="true" 
+            dir="@{basedir}" resultproperty="@{resultproperty}">
+        <jvmarg value="-Xmx512m"/>
+        <classpath>
+          <fileset dir="${maven.home}/boot">
+            <include name="*.jar" />
+          </fileset>
+          <fileset dir="${maven.home}/lib">
+            <include name="*.jar" />
+          </fileset>
+        </classpath>
+        <sysproperty key="classworlds.conf" value="${maven.home}/bin/m2.conf" />
+        <sysproperty key="maven.home" value="${maven.home}" />
+        <arg line="--batch-mode @{options} @{goal}" />
+      </java>
+    </sequential>
+  </macrodef>
+
+  <target name="maven-init">
+    <property name="maven.home" location="${basedir}/../tools/maven"/>
+    <echo message="Maven Home set to ${maven.home}"/>
+  </target>
+
+  <!-- Call maven to build the mavenized modules -->
+  <target name="maven-install" description="Run the install goal against the maven build"
+          depends="maven-init">
+
+    <property name="maven.install.opts" value="-Pskip-dist"/>
+
+    <maven basedir="${basedir}/.." 
+            options="${maven.install.opts}" 
+            goal="install"
+            resultproperty="maven.install.result"/>
+
+    <fail message="Unable to build maven modules.  See maven output for details.">
+      <condition>
+        <not>
+          <equals arg1="${maven.install.result}" arg2="0"/>
+        </not>
+      </condition>
+    </fail>
+
+  </target>
+
+  <!-- Call maven to clean the mavenized modules -->
+  <target name="maven-clean" description="Run the clean goal against the maven build."
+          depends="maven-init">
+
+    <property name="maven.clean.opts" value=""/>
+
+    <maven basedir="${basedir}/.." 
+            options="${maven.clean.opts}" 
+            goal="clean"
+            resultproperty="maven.clean.result"/>
+
+    <fail message="Unable to clean maven modules.  See maven output for details.">
+      <condition>
+        <not>
+          <equals arg1="${maven.clean.result}" arg2="0"/>
+        </not>
+      </condition>
+    </fail>
+
+  </target>
+
+
+
+
+  <!-- ================================================================== -->
+  <!-- Module Pass-through Hooks                                          -->
+  <!-- ================================================================== -->
+
+  <!--
+    | These hooks are executed after the above pass-through targets have
+    | finished with a given module.
+    -->
+
+  <!-- ======== -->
+  <!-- Remoting -->
+  <!-- ======== -->
+
+  <target name="module-jbossas-remoting">
+    <property name="jbossas-remoting.module.name" value="jbossas-remoting"/>
+    <property name="jbossas-remoting.module.output" value="${project.root}/${jbossas-remoting.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+    <copy file="${jbossas-remoting.module.output}/jboss-as-jbossas-remoting.jar"
+           tofile="${install.common.lib}/jbossas-remoting.jar" filtering="no"/>
+
+  </target>
+
+  <target name="module-remoting-all" depends="module-jbossas-remoting">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${jbossas-remoting.module.name}"/>
+    <copy todir="${install.api}/${jbossas-remoting.module.name}" filtering="no">
+      <fileset dir="${jbossas-remoting.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+
+  <!-- ======== -->
+  <!-- EJB 3.0 -->
+  <!-- ======== -->
+
+  <target name="module-ejb3">
+    <property name="ejb3.module.name" value="ejb3"/>
+    <property name="ejb3.module.output" value="${project.root}/${ejb3.module.name}/target"/>
+
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <fileset dir="${ejb3.module.output}/resources">
+        <include name="ejb3-container-jboss-beans.xml"/>
+        <include name="ejb3-interceptors-aop.xml"/>
+        <include name="ejb3-connectors-jboss-beans.xml"/>
+      </fileset>
+    	<fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-impl-as:jar"/>
+    	<fileset refid="org.jboss.shrinkwrap:shrinkwrap-extension-vdf:jar" />
+	  <fileset dir="${ejb3.module.output}/resources/META-INF">
+        <include name="singleton-container-aop.xml"/>
+      </fileset>
+      <!-- Strip version numbers from the jar names -->
+	  <mapper refid="remove-versions" />      
+      
+    </copy>
+
+      
+      <mkdir dir="${install.common.deploy}/jboss-ejb3-timerservice-mk2.jar"/>
+      <!-- Extract to JBOSS_HOME/common/deploy/jboss-ejb3-timerservice-mk2.jar -->
+      <unjar dest="${install.common.deploy}/jboss-ejb3-timerservice-mk2.jar">
+          <fileset refid="org.jboss.ejb3.timerservice:jboss-ejb3-timerservice-mk2:jar"/>
+      </unjar>
+
+    <!-- Copy across client jars -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${ejb3.module.output}/jboss-as-ejb3-client.jar"
+            tofile="${install.client}/jboss-appclient.jar" filtering="no" />
+
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${ejb3.module.output}">
+        <include name="ejb3.deployer/**"/>
+      </fileset>
+      <fileset dir="${ejb3.module.output}">
+	      <include name="ejb3-deployers-jboss-beans.xml"/>
+	      <include name="ejb3-nointerface-jboss-beans.xml"/>
+	      <include name="ejb3-metadata-deployers-jboss-beans.xml"/>
+		  <include name="jboss-ejb3-singleton-deployer-jboss-beans.xml"/>
+		  
+      </fileset>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-timerservice-deployer:jar"/>
+      <fileset refid="org.jboss.ejb3.jndi:jboss-ejb3-jndi-deployers:jar"/>
+      <!-- Strip version numbers from the jar names -->
+	  <mapper refid="remove-versions" />      
+    </copy>
+
+    <!-- Work for JBAS-9356 "Move the ejb3-async-deployer-jboss-beans.xml out of jboss-esb3-async-deployer.jar" -->
+    <copy todir="${install.common.lib}" filtering="no">
+      <fileset refid="org.jboss.ejb3.async:jboss-ejb3-async-deployer:jar"/>
+	  <mapper refid="remove-versions" />      
+    </copy>
+
+    <unzip src="${install.common.lib}/jboss-ejb3-async-deployer.jar" dest="${install.server}/all/deployers">
+        <patternset>
+            <include name="META-INF/ejb3-async-deployer-jboss-beans.xml"/>
+        </patternset>
+        <mapper type="flatten"/>
+    </unzip>
+
+  </target>
+
+  <target name="module-ejb3-all" depends="module-ejb3">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${ejb3.module.name}"/>
+    <copy todir="${install.api}/${ejb3.module.name}" filtering="no">
+      <fileset dir="${ejb3.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- ======== -->
+  <!-- ASPECTS -->
+  <!-- ======== -->
+
+  <target name="module-aspects">
+    <property name="aspects.module.name" value="aspects"/>
+    <property name="aspects.module.output" value="${project.root}/${aspects.module.name}/target"/>
+
+    <property name="aop.deployer" value="jboss-aop-jboss5.deployer"/>
+    <!-- Copy the generated libraries -->
+    <unjar src="${aspects.module.output}/jboss-as-aspects-jboss-aop-jboss5-deployer.jar" dest="${install.server}/all/deployers/${aop.deployer}"/>
+
+    <copy file="${aspects.module.output}/jboss-as-aspects-jboss-aop-jboss5.jar"
+            tofile="${install.lib}/jboss-aop-jboss5.jar" filtering="no" />
+
+    <!-- Copy across client jars -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${aspects.module.output}/jboss-as-aspects-jboss-aspect-jdk50-client.jar"
+            tofile="${install.client}/jboss-aspect-jdk50-client.jar" filtering="no" />
+
+  </target>
+
+  <target name="module-aspects-all" depends="module-aspects">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${aspects.module.name}"/>
+    <copy todir="${install.api}/${aspects.module.name}" filtering="no">
+      <fileset dir="${aspects.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <!-- ==== -->
+  <!-- Main -->
+  <!-- ==== -->
+
+  <target name="module-main">
+    <property name="main.module.name" value="main"/>
+    <property name="main.module.output" value="${project.root}/${main.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.lib}"/>
+    <copy file="${main.module.output}/jboss-as-main.jar" 
+        tofile="${install.lib}/jboss-main.jar" filtering="no"/>
+
+    <!-- Copy the generated scripts & runnable jars -->
+    <mkdir dir="${install.bin}"/>
+    <copy todir="${install.bin}" filtering="no">
+      <fileset dir="${main.module.output}/bin">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy file="${main.module.output}/jboss-as-main-run.jar" tofile="${install.bin}/run.jar"/>
+    <copy file="${main.module.output}/classes/logging.properties" tofile="${install.bin}/logging.properties"/>
+    <chmod perm="+x">
+      <fileset dir="${install.bin}">
+        <include name="**/*.sh"/>
+      </fileset>
+    </chmod>
+
+  </target>
+
+  <target name="module-main-all" depends="module-main">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${main.module.name}"/>
+    <copy todir="${install.api}/${main.module.name}" filtering="no">
+      <fileset dir="${main.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+    
+	
+    <!-- Managed Beans -->
+    <target name="module-managed-beans">
+        <mkdir dir="${install.all.deployers}/managed-beans"/>
+        
+        <unjar src="${org.jboss.managed.beans:managed-beans-mc-int:jar}" dest="${install.all.deployers}/managed-beans">
+            <patternset>
+                <include name="META-INF/*.xml"/>
+        	</patternset>
+        </unjar>
+    </target>
+    
+
+  <!-- ====== -->
+  <!-- System -->
+  <!-- ====== -->
+
+  <target name="module-system">
+    <property name="system.module.name" value="system"/>
+    <property name="system.module.output" value="${project.root}/${system.module.name}/target"/>
+
+    <!-- Copy the generated server jar -->
+    <mkdir dir="${install.lib}"/>
+    <copy file="${system.module.output}/jboss-as-system.jar" 
+            tofile="${install.lib}/jboss-system.jar" filtering="no"/>
+
+    <!-- Copy the generated client jar -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${system.module.output}/jboss-as-system-client.jar" 
+            tofile="${install.client}/jboss-system-client.jar" filtering="no"/>
+
+    <!-- Copy the DTDs -->
+    <mkdir dir="${install.dtd}"/>
+    <copy todir="${install.dtd}" filtering="no">
+      <fileset dir="${project.root}/${system.module.name}/src/resources/dtd"/>
+    </copy>
+
+  </target>
+
+  <target name="module-system-all" depends="module-system">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${system.module.name}"/>
+    <copy todir="${install.api}/${system.module.name}" filtering="no">
+      <fileset dir="${system.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ========== -->
+  <!-- System JMX -->
+  <!-- ========== -->
+
+  <target name="module-system-jmx">
+    <property name="system-jmx.module.name" value="system-jmx"/>
+    <property name="system-jmx.module.output" value="${project.root}/${system-jmx.module.name}/target"/>
+
+    <!-- Copy the generated server jar -->
+    <mkdir dir="${install.lib}"/>
+    <copy file="${system-jmx.module.output}/jboss-as-system-jmx.jar" 
+            tofile="${install.lib}/jboss-system-jmx.jar" filtering="no"/>
+
+    <!-- Copy the generated client jar -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${system-jmx.module.output}/jboss-as-system-jmx-client.jar" 
+            tofile="${install.client}/jboss-system-jmx-client.jar" filtering="no"/>
+
+  </target>
+
+  <target name="module-system-jmx-all" depends="module-system-jmx">
+  </target>
+
+  <!-- ====== -->
+  <!-- Server -->
+  <!-- ====== -->
+
+  <target name="module-server">
+    <property name="server.module.name" value="server"/>
+    <property name="server.module.output" value="${project.root}/${server.module.name}/target"/>
+
+    <!-- Copy the security-policies-service.xml -->
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <fileset dir="${server.module.output}/resources">
+        <include name="security-jboss-beans.xml"/>
+        <include name="security-policies-service.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+
+    <copy file="${server.module.output}/jboss-as-server-jboss.jar"
+            tofile="${install.common.lib}/jboss.jar" filtering="no"/>
+
+    <copy file="${server.module.output}/jboss-as-server-jmx-adaptor-plugin.jar"
+            tofile="${install.common.lib}/jmx-adaptor-plugin.jar" filtering="no"/>
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+
+    <copy file="${server.module.output}/jboss-as-server-client.jar"
+            tofile="${install.client}/jboss-client.jar" filtering="no"/>
+
+    <copy file="${server.module.output}/jboss-as-server-jmx-invoker-adaptor-client.jar"
+            tofile="${install.client}/jmx-invoker-adaptor-client.jar" filtering="no"/>
+
+    <!-- Copy the generated scripts & runnable jars -->
+    <mkdir dir="${install.bin}"/>
+    <copy todir="${install.bin}" filtering="no">
+      <fileset dir="${server.module.output}/bin">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <chmod perm="+x">
+      <fileset dir="${install.bin}">
+        <include name="**/*.sh"/>
+      </fileset>
+    </chmod>
+
+    <copy file="${server.module.output}/jboss-as-server-shutdown.jar"
+            tofile="${install.bin}/shutdown.jar" filtering="no"/>
+
+    <!-- Default server config -->
+
+    <mkdir dir="${install.server}/all/deploy"/>
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <!-- Deployable xml snipets -->
+      <fileset dir="${server.module.output}/etc/deploy">
+        <include name="**"/>
+      </fileset>
+
+      <!-- Deployable archives -->
+      <fileset dir="${server.module.output}">
+        <include name="uuid-key-generator.sar/**"/>
+        <include name="sqlexception-service.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the deployers -->
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${server.module.output}/etc/deployers">
+        <include name="**"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the "all" configuration files -->
+    <mkdir dir="${install.server}/all/conf"/>
+    <copy todir="${install.server}/all/conf" filtering="no">
+      <fileset dir="${server.module.output}/etc/conf/all"/>
+    </copy>
+
+  </target>
+
+  <target name="module-server-all" depends="module-server">
+
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${server.module.name}"/>
+    <copy todir="${install.api}/${server.module.name}" filtering="no">
+      <fileset dir="${server.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+  
+	
+  <!-- ========= -->
+  <!-- Connector -->
+  <!-- ========= -->
+
+  <target name="module-connector">
+    <property name="connector.module.name" value="connector"/>
+    <property name="connector.module.output" value="${project.root}/${connector.module.name}/target"/>
+
+    <mkdir dir="${install.server}/all/deployers"/>
+
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${connector.module.output}">
+        <include name="jboss-jca.deployer/**"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated deployment libraries -->
+    <mkdir dir="${install.server}/all/deploy"/>
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <fileset dir="${connector.module.output}/">
+        <include name="jboss-local-jdbc.rar"/>
+        <include name="jboss-xa-jdbc.rar"/>
+        <include name="mail-ra.rar"/>
+        <include name="quartz-ra.rar"/>
+      </fileset>
+      <fileset dir="${connector.module.output}/resources/jca-sar">
+        <include name="jca-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <!--
+       Remove me
+      <copy todir="${install.all.deploy}" filtering="no">
+      <fileset dir="${connector.module.output}">
+        <include name="jms-ra.rar"/>
+      </fileset>
+    </copy> -->
+
+    <mkdir dir="${install.common.lib}"/>
+    <copy file="${connector.module.output}/jboss-as-connector-jboss-common-jdbc-wrapper.jar"
+            tofile="${install.common.lib}/jboss-common-jdbc-wrapper.jar" filtering="no"/>
+    <copy file="${connector.module.output}/jboss-as-connector-jboss-jca.jar"
+            tofile="${install.common.lib}/jboss-jca.jar" filtering="no"/>
+
+    <!-- Copy the dtds -->
+    <mkdir dir="${install.dtd}"/>
+    <copy todir="${install.dtd}" filtering="no">
+      <fileset dir="${connector.module.output}/resources/dtd"/>
+    </copy>
+
+    <!-- Copy example db configs -->
+    <mkdir dir="${install.examples.jca}"/>
+    <copy todir="${install.examples.jca}" filtering="no">
+      <fileset dir="${connector.module.output}/etc/example-config">
+        <include name="*.xml"/>
+      </fileset>
+    </copy>
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <fileset dir="${connector.module.output}/etc/example-config">
+        <!--include name="firebird-service.xml"/-->
+        <include name="hsqldb-ds.xml"/>
+        <!--include name="mysql-service.xml"/-->
+        <!--include name="oracle-service.xml"/-->
+        <!--include name="postgres-service.xml"/-->
+      </fileset>
+    </copy>
+
+    <!--
+      <mkdir dir="${install.all.deploy}/jms"/>
+      <copy todir="${install.all.deploy}/jms" filtering="no">
+      <fileset dir="${_module.output}/etc/example-config">
+      <include name="hajndi-jms-ds.xml"/>
+      </fileset>
+      </copy>
+      -->
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${connector.module.output}/jboss-as-connector-jbosscx-client.jar"
+            tofile="${install.common.lib}/jbosscx-client.jar" filtering="no"/>
+
+  </target>
+
+  <target name="module-connector-all" depends="module-connector">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${connector.module.name}"/>
+    <copy todir="${install.api}/${connector.module.name}" filtering="no">
+      <fileset dir="${connector.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!--Copy generated jmx documentation -->
+    <mkdir dir="${install.jmx-api}"/>
+    <copy todir="${install.jmx-api}" filtering="no" failonerror="false">
+      <fileset dir="${connector.module.output}/jmx-api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ======== -->
+  <!-- Security -->
+  <!-- ======== -->
+
+  <target name="module-security">
+    <property name="security.module.name" value="security"/>
+    <property name="security.module.output" value="${project.root}/${security.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.lib}"/>
+    <copy file="${security.module.output}/jboss-as-security.jar"
+            tofile="${install.lib}/jbosssx-server.jar" filtering="no"/>
+
+    <copy file="${security.module.output}/jboss-as-security-client.jar"
+            tofile="${install.client}/jbosssx-as-client.jar" filtering="no"/>
+
+
+    <!-- Copy the security configuration files -->
+    <mkdir dir="${install.all.deploy}/security"/>
+    <copy todir="${install.all.deploy}/security">
+      <fileset dir="${security.module.output}/etc/deploy/">
+        <include name="*-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Install JBoss Security Password batch scripts -->
+    <copy todir="${install.bin}" flatten="true" overwrite="true">
+      <fileset dir="${security.module.output}/etc/bin">
+        <include name="password_tool.*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="module-security-all" depends="module-security">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${security.module.name}"/>
+    <copy todir="${install.api}/${security.module.name}" filtering="no">
+      <fileset dir="${security.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ======= -->
+  <!-- Cluster -->
+  <!-- ======= -->
+
+  <target name="module-cluster">
+    <property name="cluster.module.name" value="cluster"/>
+    <property name="cluster.module.output" value="${project.root}/${cluster.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+    <copy file="${cluster.module.output}/jboss-as-cluster.jar"
+            tofile="${install.common.lib}/jbossha.jar" filtering="no" />
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${cluster.module.output}/jboss-as-cluster-jboss-ha-legacy-client.jar"
+            tofile="${install.client}/jboss-ha-legacy-client.jar" filtering="no" />
+
+    <!-- Copy the deployers -->
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${cluster.module.output}/etc">
+        <include name="clustering-deployer-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the deployables -->
+    <mkdir dir="${install.server}/all/deploy/cluster"/>
+    <copy todir="${install.server}/all/deploy/cluster" filtering="no">
+      <fileset dir="${cluster.module.output}/etc">
+        <include name="hapartition-jboss-beans.xml"/>
+        <include name="deploy-hasingleton-jboss-beans.xml"/>
+        <include name="hajndi-jboss-beans.xml"/>
+        <include name="ha-legacy-jboss-beans.xml"/>
+        <include name="timestamps-jboss-beans.xml"/>
+        <include name="farm-deployment-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${install.server}/all/deploy/cluster/jgroups-channelfactory.sar"/>
+    <copy todir="${install.server}/all/deploy/cluster/jgroups-channelfactory.sar" filtering="no">
+      <fileset dir="${cluster.module.output}/resources/jgroups-channelfactory.sar">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${install.server}/all/deploy/cluster/infinispan-cache-registry.sar"/>
+    <copy todir="${install.server}/all/deploy/cluster/infinispan-cache-registry.sar" filtering="no">
+      <fileset dir="${cluster.module.output}/resources/infinispan-cache-registry.sar">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <mkdir dir="${install.server}/all/deploy-hasingleton"/>
+    <mkdir dir="${install.server}/all/deploy/deploy.last"/>
+
+    <!-- Copy the farmed deployables -->
+    <mkdir dir="${install.server}/all/farm"/>
+    <!--<copy todir="${install.server}/all/farm" filtering="no">
+      <fileset dir="${cluster.module.output}/etc">
+        <include name="cluster-examples-service.xml"/>
+      </fileset>
+    </copy>-->
+
+
+  </target>
+
+  <target name="module-cluster-all" depends="module-cluster">
+    <!-- Copy the examples -->
+    <mkdir dir="${install.docs}/${module}"/>
+    <copy todir="${install.docs}/${module}" filtering="no">
+      <fileset dir="${cluster.module.output}">
+        <include name="examples/*"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${cluster.module.name}"/>
+    <copy todir="${install.api}/${cluster.module.name}" filtering="no">
+      <fileset dir="${cluster.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ===== -->
+  <!-- Varia -->
+  <!-- ===== -->
+
+  <target name="module-varia">
+    <property name="varia.module.name" value="varia"/>
+    <property name="varia.module.output" value="${project.root}/${varia.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+    <copy todir="${install.common.lib}" filtering="no">
+      <fileset dir="${varia.module.output}">
+        <include name="jboss-as-varia-mail-plugin.jar"/>
+        <include name="jboss-as-varia-scheduler-plugin.jar"/>
+        <include name="jboss-as-varia-scheduler-plugin-example.jar"/>
+        <include name="jboss-as-varia-hsqldb.jar"/>
+        <include name="jboss-as-varia-hsqldb-plugin.jar"/>
+        <include name="jboss-as-varia-autonumber-plugin.jar"/>
+        <include name="jboss-as-varia-properties-plugin.jar"/>
+        <include name="jboss-as-varia-jboss-monitoring.jar"/>
+        <include name="jboss-as-varia-jboss-srp.jar"/>
+        <include name="jboss-as-varia-jboss-bindingservice.jar"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </copy>
+
+    <!-- Copy to docs/examples -->
+    <mkdir dir="${install.examples.varia}"/>
+    <copy todir="${install.examples.varia}" filtering="no">
+      <!--
+        <fileset dir="${project.root}/testsuite/src/etc/cluster-test">
+          <include name="jboss-bindings.xml"/>
+        </fileset>
+        -->
+      <fileset dir="${varia.module.output}">
+        <include name="jboss-as-varia-derby-plugin.jar"/>
+        <include name="jboss-as-varia-threaddump.war"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*" to="*"/>
+    </copy>
+
+    <mkdir dir="${install.examples}/jmx/persistent-service.sar"/>
+    <unjar src="${varia.module.output}/jboss-as-varia-persistent-service.sar" dest="${install.examples}/jmx/persistent-service.sar"/>
+
+    <mkdir dir="${install.examples.varia}/deployment-service"/>
+    <copy file="${varia.module.output}/jboss-as-varia-deployment-service-sar.sar"
+          tofile="${install.examples.varia}/deployment-service/deployment-service.sar"/>
+    <copy todir="${install.examples.varia}/deployment-service">
+      <fileset dir="${varia.module.output}/resources/services/deployment">
+        <exclude name="META-INF/**"/>
+      </fileset>
+    </copy>
+
+    <!-- MBean Configurator sar for setting mbean attributes when registered -->
+    <mkdir dir="${install.examples}/jmx/mbean-configurator.sar"/>
+    <unjar src="${varia.module.output}/jboss-as-varia-mbean-configurator.sar" dest="${install.examples}/jmx/mbean-configurator.sar"/>
+
+    <!-- Client jars -->
+    <mkdir dir="${install.client}"/>
+    <copy todir="${install.client}" filtering="no">
+      <fileset dir="${varia.module.output}">
+        <include name="jboss-as-varia-jbossjmx-ant.jar"/>
+        <include name="jboss-as-varia-jboss-srp-client.jar"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </copy>
+
+    <!-- Default server config -->
+
+    <!-- Copy the deployables -->
+    <mkdir dir="${install.server}/all/deploy"/>
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <!-- Deployable configuration -->
+      <fileset dir="${varia.module.output}/etc">
+        <!-- These should move to example/deploy -->
+        <include name="monitoring-service.xml"/>
+        <include name="mail-service.xml"/>
+        <include name="schedule-manager-service.xml"/>
+        <include name="scheduler-service.xml"/>
+        <include name="properties-service.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- copy snmp-adaptor.sar unpacked to deploy -->
+    <mkdir dir="${install.server}/all/deploy/snmp-adaptor.sar"/>
+    <unjar src="${varia.module.output}/jboss-as-varia-snmp-adaptor-sar.sar" 
+    	     dest="${install.server}/all/deploy/snmp-adaptor.sar">
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </unjar>
+
+    <!-- Include the JMX console war unpacked -->
+    <mkdir dir="${install.common.deploy}"/>
+    <mkdir dir="${install.common.deploy}/jmx-console.war"/>
+    <unjar src="${varia.module.output}/jboss-as-varia-jmx-console.war" dest="${install.common.deploy}/jmx-console.war"/>
+
+
+    <!-- Include the HTTP invoker service unpacked -->
+    <mkdir dir="${install.server}/all/deploy/httpha-invoker.sar"/>
+    <unjar src="${varia.module.output}/jboss-as-varia-httpha-invoker.sar" dest="${install.server}/all/deploy/httpha-invoker.sar"/>
+
+    <!-- copy the ant jmx client -->
+    <mkdir dir="${install.client}"/>
+    <copy todir="${install.client}" filtering="no">
+      <fileset dir="${varia.module.output}">
+        <include name="jboss-as-varia-jbossjmx-ant.jar"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </copy>
+
+    <!-- copy the netboot war tool -->
+    <mkdir dir="${install.examples.netboot}"/>
+    <copy todir="${install.examples.netboot}" filtering="no">
+      <fileset dir="${varia.module.output}">
+        <include name="jboss-as-varia-netboot.war"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </copy>
+
+    <!-- copy the bsh.deployer and its associated beanshell lib from thirdparty -->
+    <mkdir dir="${install.server}/all/deployers"/>
+
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${varia.module.output}/deployers">
+        <include name="**"/>
+      </fileset>
+    </copy>
+
+    <!-- copy the binding-manager sample file and JAR
+      <copy file="${project.root}/varia/output/lib/bindingservice-plugin.jar" todir="${install.server}/all/lib"/>
+      -->
+    <!--
+      <mkdir dir="${install.examples.binding-manager}"/>
+      <copy file="${project.root}/varia/src/resources/services/binding/sample-bindings.xml" todir="${install.examples.binding-manager}"/>
+      -->
+
+    <!-- the bean deployer : obsolete in jboss5
+      <mkdir dir="${install.all.deploy}/jboss-bean.deployer"/>
+      <copy todir="${install.all.deploy}/jboss-bean.deployer" filtering="no">
+      <fileset dir="${_module.output}/lib/kernel/jboss-bean.deployer">
+      <include name="**/*"/>
+      </fileset>
+      </copy>
+      -->
+
+    <!-- copy the logging-monitor service to examples -->
+    <mkdir dir="${install.examples}/jmx/logging-monitor/lib"/>
+    <copy todir="${install.examples}/jmx/logging-monitor/lib" filtering="no">
+      <fileset dir="${varia.module.output}/">
+        <include name="jboss-as-varia-logging-monitor.jar"/>
+      </fileset>
+      <mapper type="glob" from="jboss-as-varia-*.jar" to="*.jar"/>
+    </copy>
+    <copy todir="${install.examples}/jmx/logging-monitor" filtering="no">
+      <fileset dir="${varia.module.output}/resources/services/loggingmonitor"/>
+    </copy>
+
+    <copy todir="${install.server}/all/deployers/jboss-threads.deployer/META-INF">
+      <fileset dir="${varia.module.output}/resources/threads"/>
+    </copy>
+
+    <copy todir="${install.server}/all/deployers/jboss-logging.deployer/META-INF">
+      <fileset dir="${varia.module.output}/resources/logging"/>
+    </copy>
+
+    <copy todir="${install.server}/all/deploy/xnio-provider.jar/META-INF">
+      <fileset dir="${varia.module.output}/resources/xnio">
+        <include name="xnio-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${install.server}/all/deployers/xnio.deployer/META-INF">
+      <fileset dir="${varia.module.output}/resources/xnio">
+        <include name="xnio-deployer-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${install.server}/all/deploy">
+      <fileset dir="${varia.module.output}/resources/remoting">
+        <include name="remoting3-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <copy todir="${install.server}/all/deployers/jboss-remoting.deployer/META-INF">
+      <fileset dir="${varia.module.output}/resources/remoting">
+        <include name="remoting3-deployer-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+    <unjar src="${project.root}/varia/target/jboss-as-varia-http-invoker.sar"
+      dest="${install.default}/deploy/http-invoker.sar"/>
+
+  </target>
+
+  <target name="module-varia-all" depends="module-varia">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${varia.module.name}"/>
+    <copy todir="${install.api}/${varia.module.name}" filtering="no">
+      <fileset dir="${varia.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ========= -->
+  <!-- JBoss Web -->
+  <!-- ========= -->
+
+  <target name="module-tomcat">
+    <property name="tomcat.module.name" value="tomcat"/>
+    <property name="tomcat.module.output" value="${project.root}/${tomcat.module.name}/target"/>
+    <!--<property name="_module.ext" value="${project.root}/${_module.name}/ext"/>-->
+
+    <!-- Copy the deployers -->
+    <mkdir dir="${install.server}/all/deployers/jbossweb.deployer"/>
+    <copy todir="${install.server}/all/deployers/jbossweb.deployer">
+      <fileset dir="${tomcat.module.output}/deploy/jboss-web.deployer"/>
+    </copy>
+
+    <mkdir dir="${install.server}/all/deployers/jsf.deployer"/>
+    <copy todir="${install.server}/all/deployers/jsf.deployer">
+      <fileset dir="${tomcat.module.output}/deploy/jsf.deployer"/>
+    </copy>
+
+    <!--
+      <copy tofile="${install.server}/all/deployers/war-clustering-deployers-jboss-beans.xml"
+        file="${project.root}/${_module.name}/src/resources/war-clustering-deployers-jboss-beans.xml" overwrite="true"/>
+      -->
+
+    <!-- Copy the webserver runtime sar -->
+    <mkdir dir="${install.server}/all/deploy/jbossweb.sar"/>
+    <copy todir="${install.server}/all/deploy/jbossweb.sar">
+      <fileset dir="${tomcat.module.output}/deploy/jbossweb.sar"/>
+    </copy>
+
+    <!-- Copy the ROOT.war -->
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <fileset dir="${tomcat.module.output}/deploy">
+        <include name="ROOT.war/**"/>
+      </fileset>
+    </copy>
+    <!-- Copy the clustering service elements -->
+    <copy todir="${install.server}/all/deploy">
+      <fileset dir="${tomcat.module.output}/deploy">
+        <!-- Copy the mod_cluster.sar -->
+        <include name="mod_cluster.sar/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="module-tomcat-all" depends="module-tomcat">
+  </target>
+
+  <!-- ==== -->
+  <!-- IIOP -->
+  <!-- ==== -->
+
+  <target name="module-iiop">
+    <property name="iiop.module.name" value="iiop"/>
+    <property name="iiop.module.output" value="${project.root}/${iiop.module.name}/target"/>
+
+    <!-- Copy the jboss-iiop.jar -->
+    <copy file="${iiop.module.output}/jboss-as-iiop.jar"
+            tofile="${install.common.lib}/jboss-iiop.jar" filtering="no" />
+
+    <!-- Copy the jboss-iiop-client.jar -->
+    <copy file="${iiop.module.output}/jboss-as-iiop-client.jar"
+            tofile="${install.common.lib}/jboss-iiop-client.jar" filtering="no" />
+
+    <!-- Copy jndi.properties file -->
+    <mkdir dir="${install.server}/all/conf"/>
+    <copy todir="${install.server}/all/conf" filtering="no" overwrite="true">
+      <fileset dir="${iiop.module.output}/etc/conf">
+        <include name="jndi.properties"/>
+      </fileset>
+    </copy>
+
+    <mkdir dir="${install.server}/all/deploy"/>
+    <copy todir="${install.server}/all/deploy" filtering="no">
+      <!-- Deployable service -->
+      <fileset dir="${iiop.module.output}/etc">
+        <include name="iiop-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="module-iiop-all" depends="module-iiop">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${iiop.module.name}"/>
+    <copy todir="${install.api}/${iiop.module.name}" filtering="no">
+      <fileset dir="${iiop.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ========== -->
+  <!-- Management -->
+  <!-- ========== -->
+
+  <target name="module-management">
+    <property name="management.module.name" value="management"/>
+    <property name="management.module.output" value="${project.root}/${management.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+    <copy file="${management.module.output}/jboss-as-management.jar"
+            tofile="${install.common.lib}/jboss-management.jar" filtering="no" />
+    <copy file="${management.module.output}/jboss-as-management-jsr77.jar"
+            tofile="${install.common.lib}/jboss-jsr77.jar" filtering="no" />
+
+    <mkdir dir="${install.examples}/jmx"/>
+    <copy file="${management.module.output}/jboss-as-management-ejb-management.jar"
+            tofile="${install.examples}/jmx/ejb-management.jar" filtering="no" />
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${management.module.output}/jboss-as-management-jsr77-client.jar"
+            tofile="${install.client}/jboss-jsr77-client.jar" filtering="no" />
+
+  </target>
+
+  <target name="module-management-all" depends="module-management">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${management.module.name}"/>
+    <copy todir="${install.api}/${management.module.name}" filtering="no">
+      <fileset dir="${management.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated todo docs -->
+    <mkdir dir="${install.todo}/${management.module.name}"/>
+    <copy todir="${install.todo}/${management.module.name}" filtering="no" failonerror="false">
+      <fileset dir="${management.module.output}/todo">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ======= -->
+  <!-- Console -->
+  <!-- ======= -->
+
+  <target name="module-console">
+    <property name="console.module.name" value="console"/>
+    <property name="console.module.output" value="${project.root}/${console.module.name}/target"/>
+
+    <!-- Copy the generated scripts & runnable jars -->
+    <mkdir dir="${install.bin}"/>
+    <copy todir="${install.bin}" filtering="no">
+      <fileset dir="${console.module.output}/bin">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+    <copy file="${console.module.output}/jboss-as-console-twiddle.jar"
+            tofile="${install.bin}/twiddle.jar" filtering="no" />
+    <chmod perm="+x">
+      <fileset dir="${install.bin}">
+        <include name="**/*.sh"/>
+      </fileset>
+    </chmod>
+
+    <!-- Unpack the plugin manager SAR (embedded) and application WAR -->
+  	<!-- Note: disable web-console for now
+    <unjar src="${console.module.output}/jboss-as-console-console-mgr-sar.jar" 
+             dest="${install.all.deploy}/management/console-mgr.sar"/>
+    <unjar src="${console.module.output}/jboss-as-console-web-console.war" 
+             dest="${install.all.deploy}/management/console-mgr.sar/web-console.war"/> -->
+
+  </target>
+
+  <target name="module-console-all" depends="module-console">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${console.module.name}"/>
+    <copy todir="${install.api}/${console.module.name}" filtering="no">
+      <fileset dir="${console.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ============= -->
+  <!-- Compatibility -->
+  <!-- ============= -->
+  <target name="module-compatibility">
+    <call target="make-compat"/>
+    <call target="check-compat"/>
+  </target>
+
+  <target name="make-compat" if="compatibility.make">
+    <!-- Create serialized versions of contract classes -->
+    <mkdir dir="${compatibility.dir}"/>
+    <java classname="${compatibility.bin}" fork="true" failonerror="true" dir="${compatibility.dir}">
+      <arg value="make"/>
+      <arg value="${contract.classes}"/>
+      <classpath>
+        <pathelement path="${compatibility.classpath}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="check-compat" if="compatibility.check">
+    <!-- Check compiled contract classes against serialized versions -->
+    <java classname="${compatibility.bin}" fork="true" failonerror="true" dir="${compatibility.dir}">
+      <arg value="check"/>
+      <arg value="${contract.classes}"/>
+      <classpath>
+        <pathelement path="${compatibility.classpath}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <!-- ========== -->
+  <!-- Deployment -->
+  <!-- ========== -->
+
+  <target name="module-deployment">
+    <property name="deployment.module.name" value="deployment"/>
+    <property name="deployment.module.output" value="${project.root}/${deployment.module.name}/target"/>
+
+    <!-- Copy the generated libraries -->
+    <mkdir dir="${install.common.lib}"/>
+    <copy file="${deployment.module.output}/jboss-as-deployment-jboss-jsr88.jar"
+        tofile="${install.common.lib}/jboss-jsr88.jar" filtering="no"/>
+
+    <copy todir="${install.all.deploy}" filtering="no">
+      <fileset dir="${deployment.module.output}/etc">
+        <include name="jsr88-service.xml"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+    <copy file="${deployment.module.output}/jboss-as-deployment.jar"
+        tofile="${install.client}/jboss-deployment.jar" filtering="no"/>
+
+  </target>
+
+  <target name="module-deployment-all" depends="module-deployment">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${deployment.module.name}"/>
+    <copy todir="${install.api}/${deployment.module.name}" filtering="no">
+      <fileset dir="${deployment.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated todo docs -->
+    <mkdir dir="${install.todo}/${deployment.module.name}"/>
+    <copy todir="${install.todo}/${deployment.module.name}" filtering="no" failonerror="false">
+      <fileset dir="${deployment.module.output}/todo">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- =========== -->
+  <!-- Webservices -->
+  <!-- =========== -->
+
+  <target name="module-webservices">
+    <property name="webservices.module.name" value="webservices"/>
+    <property name="webservices.module.output" value="${project.root}/${webservices.module.name}/target"/>
+
+    <unzip src="${org.jboss.ws.cxf:jbossws-cxf-resources:jar}"
+           dest="${install.bin}">
+      <patternset>
+        <include name="bin/wsconsume.bat"/>
+        <include name="bin/wsconsume.sh"/>
+        <include name="bin/wsprovide.bat"/>
+        <include name="bin/wsprovide.sh"/>
+        <include name="bin/wsrunclient.bat"/>
+        <include name="bin/wsrunclient.sh"/>
+        <include name="bin/wstools.bat"/>
+        <include name="bin/wstools.sh"/>
+      </patternset>
+      <mapper type="flatten"/>
+    </unzip>
+
+    <antcall target="install-jbossws-to-common-lib" inheritRefs="true"/>
+    <antcall target="install-jbossws-to-endorsed" inheritRefs="true"/>
+    <antcall target="install-jbossws-to-deploy" inheritRefs="true"/>
+    <antcall target="install-jbossws-to-deployers" inheritRefs="true"/>
+    <antcall target="install-jbossws-jaxrpc-deployers" inheritRefs="true"/>
+  </target>
+
+  <target name="install-jbossws-to-common-lib">
+    <copy todir="${install.common.lib}" flatten="true" overwrite="true">
+      <fileset refid="sun-fi:FastInfoset:jar"/>
+      <fileset refid="jboss.jaxbintros:jboss-jaxb-intros:jar"/>
+      <fileset refid="org.jboss.ws.native:jbossws-native-core:jar"/>
+      <fileset refid="org.jboss.netty:netty:jar"/>
+      <fileset refid="wsdl4j:wsdl4j:jar"/>
+      <fileset refid="org.apache:xmlsec:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+  </target>
+
+  <target name="install-jbossws-to-endorsed">
+    <!-- Endorse JBossWS jars on JDK1.6 and above -->
+    <copy todir="${install.lib}/endorsed" flatten="true" overwrite="true">
+      <fileset refid="org.jboss.spec.javax.xml.ws:jboss-jaxws-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-factories:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+  </target>
+
+  <target name="install-jbossws-to-deploy">
+    <!-- Install JBossWS web console to deploy directory -->
+    <mkdir dir="${install.common.deploy}"/>
+    <unzip src="${org.jboss.ws.cxf:jbossws-cxf-management:war}"
+        dest="${install.common.deploy}/jbossws-console.war"/>
+  </target>
+
+  <target name="install-jbossws-to-deployers">
+    <!-- Install JBossWS deployers, runtime jars and configs -->
+    <mkdir dir="${install.all.deployers}/jbossws.deployer"/>
+    <unzip dest="${install.all.deployers}/jbossws.deployer" 
+             src="${webservices.module.output}/jboss-as-webservices-jbossws-jboss60-deployer.zip"/>
+    <copy todir="${install.all.deployers}/jbossws.deployer" flatten="true" overwrite="true">
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-server:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-client:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-factories:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-transports-httpserver:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+    <unzip src="${org.jboss.ws.cxf:jbossws-cxf-resources:jar}"
+           dest="${webservices.module.output}/jbossws-cxf-resources"/>
+    <copy todir="${install.all.deployers}/jbossws.deployer">
+      <fileset dir="${webservices.module.output}/jbossws-cxf-resources/resources/jbossws-jboss601/jbossws.beans">
+        <include name="META-INF/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="install-jbossws-jaxrpc-deployers">
+    <!-- Install JBossWS jaxrpc deployers -->
+    <mkdir dir="${install.all.deployers}/jbossws-jaxrpc.deployer"/>
+    <unzip dest="${install.all.deployers}/jbossws-jaxrpc.deployer" 
+             src="${webservices.module.output}/jboss-as-webservices-jbossws-jboss60-jaxrpc-deployer.zip"/>
+    <copy todir="${install.all.deployers}/jbossws-jaxrpc.deployer" flatten="true" overwrite="true">
+      <fileset refid="org.jboss.ws.native:jbossws-native-factories:jar"/>
+      <fileset refid="org.jboss.ws.native:jbossws-native-services:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+    <unzip src="${org.jboss.ws.cxf:jbossws-cxf-resources:jar}"
+           dest="${webservices.module.output}/jbossws-cxf-resources"/>
+    <copy todir="${install.all.deployers}/jbossws-jaxrpc.deployer">
+      <fileset dir="${webservices.module.output}/jbossws-cxf-resources/resources/jbossws-jaxrpc-jboss601/jbossws.beans">
+        <include name="META-INF/**"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="module-webservices-all">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${webservices.module.name}"/>
+    <copy todir="${install.api}/${webservices.module.name}" filtering="no">
+      <fileset dir="${webservices.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy the generated todo docs -->
+    <mkdir dir="${install.todo}/${webservices.module.name}"/>
+    <copy todir="${install.todo}/${webservices.module.name}" filtering="no" failonerror="false">
+      <fileset dir="${webservices.module.output}/todo">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- =========== -->
+  <!-- Resteasy    -->
+  <!-- =========== -->
+
+  <target name="module-resteasy">
+    <property name="resteasy.module.name" value="resteasy-int"/>
+    <property name="resteasy.module.output" value="${project.root}/${resteasy.module.name}/zip/target/distribution"/>
+
+    <unzip dest="${install.all.deployers}" 
+             src="${resteasy.module.output}/resteasy-int-all.zip"/>
+  </target>
+
+  <target name="module-resteasy-all">
+  </target>
+
+  <!-- ============ -->
+  <!-- Hibernate    -->
+  <!-- ============ -->
+
+  <target name="module-hibernate-int">
+    <property name="hibernate.module.name" value="hibernate-int"/>
+    <property name="hibernate.module.output" value="${project.root}/${hibernate.module.name}/target"/>
+
+    <mkdir dir="${install.common.lib}"/>
+
+    <!-- The hibernate-int module output -->
+    <copy file="${hibernate.module.output}/jboss-as-hibernate-int.jar"
+            todir="${install.common.lib}/" filtering="no" />
+
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset dir="${hibernate.module.output}/resources">
+        <include name="hibernate-deployer-jboss-beans.xml"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="module-hibernate-int-all" depends="module-hibernate-int">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${hibernate.module.name}"/>
+    <copy todir="${install.api}/${hibernate.module.name}" filtering="no">
+      <fileset dir="${hibernate.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- ============ -->
+  <!-- HornetQ      -->
+  <!-- ============ -->
+
+  <target name="module-hornetq-int">
+    <property name="hornetq.module.name" value="hornetq-int"/>
+    <property name="hornetq.module.output" value="${project.root}/${hornetq.module.name}/target"/>
+
+    <mkdir dir="${install.common.lib}"/>
+
+    <mkdir dir="${install.native.linux.32}"/>
+    <mkdir dir="${install.native.linux.64}"/>
+    <unzip src="${org.hornetq:hornetq-resources:jar}"
+       dest="${install.native.linux.64}">
+           <patternset>
+                <include name="libHornetQAIO64.so"/>
+           </patternset>
+    </unzip>
+    <unzip src="${org.hornetq:hornetq-resources:jar}"
+       dest="${install.native.linux.32}">
+           <patternset>
+                <include name="libHornetQAIO32.so"/>
+           </patternset>
+    </unzip>
+    <!--
+         Default configuration
+    -->
+   <mkdir dir="${install.default.deploy}/hornetq"/>
+    <!-- if you want hornetq-config files on the integration project instead:
+  	<copy todir="${install.default.deploy}/hornetq">
+       <fileset dir="${hornetq.module.output}/resources/config/non-clustered"/>
+    </copy> -->
+
+   <unzip src="${org.hornetq:hornetq-resources:jar}" dest="${install.default.deploy}/hornetq">
+	  <patternset includes="jboss-as-6/non-clustered/*" excludes="**/hornetq-configuration.xml,**/hornetq-users.properties,**/hornetq-roles.properties,**/hornetq-roles.properties,**/login-config.xml">
+	  </patternset>
+	  <mapper type="flatten"/>
+   </unzip>
+   
+	<!-- JBAS-8148 AS specific HornetQ configuration -->
+	<copy todir="${install.default.deploy}/hornetq" filtering="no">
+        <fileset dir="${hornetq.module.output}/resources/config/non-clustered">
+          <include name="hornetq-configuration.xml"/>
+        </fileset>
+	</copy>
+   
+    <mkdir dir="${install.default.deploy}/jms-ra.rar"/>
+    <mkdir dir="${install.default.deploy}/jms-ra.rar/META-INF"/>
+
+  	<!--
+         All configuration
+    -->
+    <mkdir dir="${install.all.deploy}/hornetq"/>
+  	<!-- if you want hornetq-config flies on the integration project instead
+    <copy todir="${install.all.deploy}/hornetq">
+       <fileset dir="${hornetq.module.output}/resources/config/clustered"/>
+    </copy> -->
+  	
+    <unzip src="${org.hornetq:hornetq-resources:jar}" dest="${install.all.deploy}/hornetq">
+    	  <patternset includes="jboss-as-6/clustered/*" excludes="**/hornetq-configuration.xml,**/hornetq-users.properties,**/hornetq-roles.properties,**/hornetq-roles.properties,**/login-config.xml">
+    	  </patternset>
+    	  <mapper type="flatten"/>
+    </unzip>
+
+  	<!-- JBAS-8148 AS specific HornetQ configuration -->
+  	<copy todir="${install.all.deploy}/hornetq" filtering="no">
+          <fileset dir="${hornetq.module.output}/resources/config/clustered">
+            <include name="hornetq-configuration.xml"/>
+          </fileset>
+  	</copy>
+      
+
+    <mkdir dir="${install.all.deploy}/jms-ra.rar"/>
+    <mkdir dir="${install.all.deploy}/jms-ra.rar/META-INF"/>
+    <unzip src="${org.hornetq:hornetq-resources:jar}" dest="${install.all.deploy}/jms-ra.rar/META-INF">
+    	  <patternset>
+    	    <include name="ra.xml"/>
+    	  </patternset>
+    	  <mapper type="flatten"/>
+    </unzip>
+  	<copy todir="${install.all.deploy}/jms-ra.rar">
+      <fileset refid="org.hornetq:hornetq-ra:jar"/>
+      <mapper refid="remove-versions" />
+  	</copy>
+
+    <!-- The hornetq-int module output -->
+    <copy file="${hornetq.module.output}/jboss-as-hornetq-int.jar"
+            todir="${install.common.lib}/" filtering="no" />
+
+  	<copy file="${hornetq.module.output}/resources/hornetq-deployers-jboss-beans.xml" todir="${install.server}/default/deployers"/>
+  	<copy file="${hornetq.module.output}/resources/hornetq-deployers-jboss-beans.xml" todir="${install.server}/all/deployers"/>
+
+
+  </target>
+
+  <target name="module-hornetq-int-all" depends="module-hornetq-int">
+    <!-- Copy the generated javadocs -->
+    <mkdir dir="${install.api}/${hornetq.module.name}"/>
+    <copy todir="${install.api}/${hornetq.module.name}" filtering="no">
+      <fileset dir="${hornetq.module.output}/api">
+        <include name="**/*"/>
+      </fileset>
+    </copy>
+
+
+  </target>
+
+  <!-- ================= -->
+  <!--   ProfileService  -->
+  <!-- ================= -->
+
+  <target name="module-profileservice">
+
+    <property name="profileservice.module.name" value="profileservice"/>
+    <property name="profileservice.module.output" value="${project.root}/${profileservice.module.name}/target"/>
+
+    <mkdir dir="${install.common.lib}"/>
+
+    <!-- The profileservice module output -->
+    <copy todir="${install.common.lib}" filtering="no">
+      <fileset dir="${profileservice.module.output}/" includes="jboss-as-profileservice.jar"/>
+    </copy>
+    <!-- Copy the profileservice hdscanner bean to deploy -->
+    <copy todir="${install.server}/all/deploy/"
+        file="${profileservice.module.output}/resources/hdscanner-jboss-beans.xml" />
+    <!-- Copy the profileservice beans to an optional file -->
+    <copy todir="${install.server}/all/deploy/"
+        file="${profileservice.module.output}/resources/profileservice-jboss-beans.xml" />
+	<!-- Copy the profileservice client jar. -->
+	<copy file="${profileservice.module.output}/jboss-as-profileservice-client.jar"
+	            tofile="${install.client}/jboss-profileservice-client.jar" filtering="no" />
+  	
+  </target>
+
+  <!-- ========================================================================== -->
+  <!--  Thirdparty dependencies consumed directly from the local maven repository -->
+  <!-- ========================================================================== -->
+
+  <target name="thirdparty" description="Copy thirdparty dependencies from the repository">
+
+    <mkdir dir="${install.common.lib}"/>
+    <copy todir="${install.common.lib}" filtering="no">
+      <fileset refid="apache-xalan:xalan:jar"/>
+      <fileset refid="apache-xalan:serializer:jar"/>
+      <fileset refid="org.apache.cxf:cxf-api:jar"/>
+      <fileset refid="org.apache.cxf:cxf-common-schemas:jar"/>
+      <fileset refid="org.apache.cxf:cxf-common-utilities:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-coloc:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-http:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-object:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-soap:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-xml:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-core:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-databinding-aegis:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-databinding-jaxb:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-frontend-jaxws:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-frontend-simple:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-management:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-http:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-jms:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-local:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-addr:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-policy:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-rm:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-security:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-common:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-java2ws:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-validator:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-core:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-frontend-jaxws:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-dv:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-ts:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-boolean:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-bug671:jar"/>
+      <fileset refid="org.apache.neethi:neethi:jar"/>
+      <fileset refid="org.apache.ws.commons.schema:XmlSchema:jar"/>
+      <fileset refid="org.apache.ws.security:wss4j:jar"/>
+      <fileset refid="org.jboss.threads:jboss-threads:jar"/>
+      <fileset refid="org.jboss.xnio:xnio-api:jar"/>
+      <fileset refid="javax.jws:jsr181-api:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-common:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-framework:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-spi:jar"/>
+      <fileset refid="org.jboss.ws.native:jbossws-native-core:jar"/>
+      <fileset refid="org.jboss.ws.projects:jaxws-httpserver-httpspi:jar"/>
+      <fileset refid="org.jboss.netty:netty:jar"/>
+      <fileset refid="commons-beanutils:commons-beanutils:jar"/>
+      <fileset refid="asm:asm:jar"/>
+      <fileset refid="antlr:antlr:jar"/>
+      <fileset refid="commons-collections:commons-collections:jar"/>
+      <fileset refid="org.jboss.security:jboss-negotiation:jar"/>
+      <fileset refid="org.jboss.security:jbossxacml:jar"/>
+      <fileset refid="org.picketbox:picketbox-bare:jar"/>
+      <fileset refid="org.jboss.slf4j:slf4j-jboss-logmanager:jar"/>
+      <fileset refid="org.slf4j:slf4j-api:jar"/>
+      <fileset refid="org.slf4j:jcl-over-slf4j:jar"/>
+      <fileset refid="log4j:log4j:jar"/>
+      <fileset refid="org.jboss.logmanager:jboss-logmanager-log4j:jar"/>
+      <fileset refid="org.quartz-scheduler:quartz:jar"/>
+      <fileset refid="jaxen:jaxen:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-client:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-server-api:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-server-core:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-server-cache-spi:jar"/>
+      <fileset refid="org.jboss.integration:jboss-integration:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-common:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-client:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ear:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ejb:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-rar:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-war:jar"/>
+      <fileset refid="org.jboss.spec.javax.annotation:jboss-annotations-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.ejb:jboss-ejb-api_3.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.el:jboss-el-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.enterprise.deploy:jboss-jad-api_1.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.jms:jboss-jms-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.resource:jboss-connector-api_1.5_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.security.auth.message:jboss-jaspi-api_1.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet:jboss-servlet-api_3.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet.jsp:jboss-jsp-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.bind:jboss-jaxb-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.registry:jboss-jaxr-api_1.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.rpc:jboss-jaxrpc-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.ws:jboss-jaxws-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.naming:jnpserver:jar"/>
+      <fileset refid="org.jboss.jbossts:jbossjts:jar"/>
+      <fileset refid="org.jboss.jbossts:jbossjts-integration:jar"/>
+      <fileset refid="org.jboss.remoting:jboss-remoting:jar"/>
+      <fileset refid="org.jboss.marshalling:jboss-marshalling:jar"/>
+      <fileset refid="org.jboss.marshalling:jboss-marshalling-river:jar"/>
+      <fileset refid="jboss:jboss-serialization:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-cache:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-common:jar"/>
+      <fileset refid="org.jboss.ejb3.async:jboss-ejb3-async-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.async:jboss-ejb3-async-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.concurrency:jboss-ejb3-concurrency-aop:jar"/>
+      <fileset refid="org.jboss.ejb3.concurrency:jboss-ejb3-concurrency-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.container:jboss-ejb3-container-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.context:jboss-ejb3-context-base:jar"/>
+      <fileset refid="org.jboss.ejb3.context:jboss-ejb3-context-naming:jar"/>
+      <fileset refid="org.jboss.ejb3.context:jboss-ejb3-context-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.effigy:jboss-ejb3-effigy-aop-int:jar"/>
+      <fileset refid="org.jboss.ejb3.effigy:jboss-ejb3-effigy-api:jar"/>
+      <fileset refid="org.jboss.ejb3.effigy:jboss-ejb3-effigy-common:jar"/>
+      <fileset refid="org.jboss.ejb3.effigy:jboss-ejb3-effigy-int2:jar"/>
+      <fileset refid="org.jboss.ejb3.ejbref.resolver:ejbref-resolver-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.ejbref.resolver:ejbref-resolver-ejb30-impl:jar"/>      
+      <fileset refid="org.jboss.ejb3.ejbref.resolver:ejbref-resolver-ejb31-impl:jar"/>      
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-api:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-api-shrinkwrap:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-impl-base:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-impl-shrinkwrap:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-sub:jar"/>
+      <fileset refid="org.jboss.ejb3.heks:jboss-ejb3-heks:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-core:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-deployers:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-endpoint:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-ext-api:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-ext-api-impl:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-interceptors:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-jpa-int:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-metadata:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-metadata-deployers:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-mc-int:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-timerservice-naming:jar"/>
+      <fileset refid="org.jboss.ejb3.jndi:jboss-ejb3-jndi-binder:jar"/>
+      <fileset refid="org.jboss.ejb3.nointerface:jboss-ejb3-nointerface-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.nointerface:jboss-ejb3-nointerface-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-aop-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-deployer:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-proxy-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.sis:jboss-ejb3-sis:jar"/>
+      <!--fileset refid="org.jboss.ejb3.statefulcache:jboss-ejb3-statefulcache-ispn:jar"/-->
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-impl:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-spi:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-clustered:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-security:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-timerservice-spi:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-transactions:jar"/>
+      <fileset refid="org.jboss.ejb3.instantiator:jboss-ejb3-instantiator-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.instantiator:jboss-ejb3-instantiator-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.instantiator:jboss-ejb3-instantiator-deployer:jar"/>      
+      <fileset refid="org.jboss.ejb3.proxy:proxy-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.proxy:proxy-javassist:jar"/>
+      <fileset refid="org.jboss.ejb3.proxy:proxy-reflect:jar"/>
+      <fileset refid="org.jboss.ejb3.timeout:jboss-ejb3-timeout-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.timeout:jboss-ejb3-timeout-3.1:jar"/>
+      <fileset refid="org.jboss.ejb3.timerservice:ejb31-calendar-expr-parser:jar"/>
+      <fileset refid="org.jboss.ejb3.timerservice:jboss-ejb3-timerservice-extension:jar"/>
+      <fileset refid="org.jboss.ejb3.tx2:jboss-ejb3-tx2-aop:jar"/>
+      <fileset refid="org.jboss.ejb3.tx2:jboss-ejb3-tx2-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.tx2:jboss-ejb3-tx2-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.vfs:jboss-ejb3-vfs-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.vfs:jboss-ejb3-vfs-impl-vfs3:jar"/>  
+      <fileset refid="org.jboss.embedded:jboss-embedded-api:jar" />
+      <fileset refid="org.jboss.embedded:jboss-embedded-core:jar" />
+		<!-- Managed beans -->
+      <fileset refid="org.jboss.managed.beans:managed-beans-impl:jar"/>  
+      <fileset refid="org.jboss.managed.beans:managed-beans-mc-int:jar"/>  
+      <fileset refid="org.jboss.managed.beans:managed-beans-metadata:jar"/>  
+      <fileset refid="org.jboss.managed.beans:managed-beans-metadata-jbmeta:jar"/>  
+      <fileset refid="org.jboss.managed.beans:managed-beans-proxy-impl:jar"/>  
+      <fileset refid="org.jboss.managed.beans:managed-beans-spi:jar"/>  
+      <fileset refid="org.jboss.reloaded.naming:jboss-reloaded-naming-deployers:jar"/>
+      <fileset refid="org.jboss.reloaded.naming:jboss-reloaded-naming-impl:jar"/>
+      <fileset refid="org.jboss.reloaded.naming:jboss-reloaded-naming-spi:jar"/>
+      <fileset refid="org.jboss.shrinkwrap:shrinkwrap-api:jar" />
+      <fileset refid="org.jboss.shrinkwrap:shrinkwrap-impl-base:jar" />
+      <fileset refid="org.jboss.shrinkwrap:shrinkwrap-spi:jar" />
+      <fileset refid="org.jboss.shrinkwrap:shrinkwrap-extension-vfs3:jar" />
+
+      <!-- SwitchBoard -->
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-spi:jar"/>
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-impl:jar"/>
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-mc-spi:jar"/>
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-mc-impl:jar"/>
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-javaee:jar"/>
+      <fileset refid="org.jboss.switchboard:jboss-switchboard-jbmeta-javaee:jar"/>
+    	
+      <fileset refid="org.hibernate:hibernate-core:jar"/>
+      <fileset refid="org.hibernate:hibernate-commons-annotations:jar"/>
+      <fileset refid="org.hibernate:hibernate-entitymanager:jar"/>
+      <fileset refid="org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar"/>
+      <fileset refid="org.hibernate:hibernate-validator:jar"/>
+      <fileset refid="org.hibernate:hibernate-validator-legacy:jar"/>
+      
+      <fileset refid="org.jboss.injection:jboss-injection:jar"/>
+      <fileset refid="org.jboss.injection:jboss-resolver-spi:jar"/>
+      <fileset refid="org.jboss.injection:jboss-resolver-impl:jar"/>
+      <fileset refid="org.jboss.injection:jboss-switchboard-metadata:jar"/>
+      <fileset refid="org.jboss.injection:jboss-injection-switchboard-deployer:jar"/>
+        <fileset refid="org.jboss.injection:jboss-injection-injector:jar"/>        
+        <fileset refid="org.jboss.injection:jboss-injection-mc-impl:jar"/>
+        <fileset refid="org.jboss.injection:jboss-injection-manager:jar"/>
+            
+      <fileset refid="org.jboss.jpa:jboss-jpa-deployers:jar"/>
+      <fileset refid="org.jboss.jpa:jboss-jpa-vfs3:jar"/>
+      <fileset refid="org.jboss.jpa:jboss-jpa-impl:jar"/>
+      <fileset refid="org.jboss.jpa:jboss-jpa-spi:jar"/>
+      <fileset refid="org.jboss.aspects:jboss-current-invocation-aspects:jar"/>
+      <fileset refid="org.jboss.aspects:jboss-remoting-aspects:jar"/>
+      <fileset refid="org.jboss.aspects:jboss-security-aspects:jar"/>
+      <fileset refid="org.jboss.aspects:jboss-transaction-aspects:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-plugins:jar"/>
+      <fileset refid="bcel:bcel:jar"/>
+      <fileset refid="javax.enterprise:cdi-api:jar"/>
+      <fileset refid="javax.mail:mail:jar"/>
+      <fileset refid="javax.validation:validation-api:jar"/>
+      <fileset refid="org.jboss.scanning:scanning-deployers:jar"/>
+      <fileset refid="org.jboss.mc-int:jboss-mc-int-servlet:jar"/>
+      <fileset refid="org.beanshell:bsh:jar"/>
+      <fileset refid="org.snmp4j:snmp4j:jar"/>
+      <fileset refid="wutka-dtdparser:dtdparser:jar"/>
+      <fileset refid="apache-bsf:bsf:jar"/>
+      <fileset refid="org.jboss.spec.javax.el:jboss-el-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet:jboss-servlet-api_3.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet.jsp:jboss-jsp-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.weld:weld-api:jar"/>
+      <fileset refid="org.jboss.interceptor:jboss-interceptor-spi:jar"/>
+      <fileset refid="org.jboss.interceptor:jboss-interceptor-core:jar"/>
+      <fileset refid="org.hornetq:hornetq-jboss-as-integration:jar"/>
+      <fileset refid="org.hornetq:hornetq-bootstrap:jar"/>
+      <fileset refid="org.hornetq:hornetq-core:jar"/>
+      <fileset refid="org.hornetq:hornetq-logging:jar"/>
+      <fileset refid="org.jboss.jbossas:jboss-as-hornetq-int:jar"/>
+      <fileset refid="org.hornetq:hornetq-jms:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+    <!-- Install jboss-remoting 3.x as jboss-remoting-3.jar -->
+    <copy todir="${install.common.lib}" filtering="no">
+      <fileset refid="org.jboss.remoting3:jboss-remoting:jar"/>
+      <chainedmapper>
+        <mapper refid="remove-versions" />
+        <globmapper from="*.jar" to="*-3.jar"/>
+      </chainedmapper>
+    </copy>
+
+    <!-- Install JBossWS ASIL to common/lib directory -->
+    <copy file="${webservices.module.output}/jboss-as-webservices.jar"
+            tofile="${install.common.lib}/jbossws-jboss60.jar"/>
+
+    <copy file="${snmptrapappender:snmpTrapAppender:jar}"
+            tofile="${install.common.lib}/log4j-snmp-appender.jar"/>
+
+    <!-- Copy thirdparty libraries to server/all/lib -->
+    <mkdir dir="${install.all.lib}"/>
+    <copy todir="${install.all.lib}" filtering="no">
+      <fileset refid="jacorb:jacorb:jar"/>
+      <fileset refid="org.jgroups:jgroups:jar"/>
+      <fileset refid="net.jcip:jcip-annotations:jar"/>
+      <fileset refid="org.hibernate:hibernate-infinispan:jar"/>
+      <fileset refid="org.infinispan:infinispan-core:jar"/>
+      <fileset refid="org.infinispan:infinispan-tree:jar"/>
+      <fileset refid="org.jboss.ejb3.statefulcache:jboss-ejb3-statefulcache-ispn:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-server-ispn:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-server-cache-ispn:jar"/>
+      <fileset refid="org.rhq.helpers:rhq-pluginAnnotations:jar"/>
+      <!--fileset refid="i18nlog:i18nlog"/-->
+      <mapper refid="remove-versions"/>
+    </copy>
+
+    <!-- Copy the generated libraries to lib-->
+    <mkdir dir="${install.lib}"/>
+    <copy todir="${install.lib}" filtering="no">
+      <fileset refid="javassist:javassist:jar"/>
+      <fileset refid="org.jboss.aop:jboss-aop:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-api:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-api-mc:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-api-as:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-spi:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-spi-mc:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-spi-as:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-impl-base:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-impl-mc:jar"/>
+      <fileset refid="org.jboss.bootstrap:jboss-bootstrap-impl-as:jar"/>
+      <fileset refid="org.jboss:jboss-common-core:jar"/>
+      <fileset refid="org.jboss.logging:jboss-logging:jar"/>
+      <fileset refid="org.jboss.logmanager:jboss-logmanager:jar"/>
+      <fileset refid="org.jboss.stdio:jboss-stdio:jar"/>
+      <fileset refid="org.jboss.integration:jboss-classloading-spi:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool-scoped:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool-jbosscl:jar"/>
+      <fileset refid="org.jboss:jboss-reflect:jar"/>
+      <fileset refid="org.jboss:jboss-mdr:jar"/>
+      <fileset refid="org.jboss.man:jboss-managed:jar"/>
+      <fileset refid="org.jboss.man:jboss-metatype:jar"/>
+      <fileset refid="oswego-concurrent:concurrent:jar"/>
+      <fileset refid="dom4j:dom4j:jar"/>
+      <fileset refid="org.jboss.mx:jboss-j2se:jar"/>
+      <fileset refid="org.jboss.mx:jboss-jmx-annotations:jar"/>
+      <fileset refid="org.jboss.mx:jboss-mbeans:jar"/>
+      <fileset refid="org.jboss.mx:jboss-mbeanserver:jar"/>
+      <fileset refid="org.jboss.mx:jboss-jmx:jar"/>
+      <fileset refid="org.jboss.cl:jboss-classloader:jar"/>
+      <fileset refid="org.jboss.cl:jboss-classloading:jar"/>
+      <fileset refid="org.jboss.cl:jboss-classloading-vfs:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-client:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-client-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-core:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-core-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-impl:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-jmx:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-structure-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-vfs:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-vfs-spi:jar"/>
+      <fileset refid="org.jboss.scanning:scanning-spi:jar"/>
+      <fileset refid="org.jboss.scanning:scanning-impl:jar"/>
+      <fileset refid="org.jboss.scanning:scanning-plugins:jar"/>
+      <fileset refid="org.jboss.kernel:jboss-aop-mc-int:jar"/>
+      <fileset refid="org.jboss.kernel:jboss-dependency:jar"/>
+      <fileset refid="org.jboss.kernel:jboss-kernel:jar"/>
+      <fileset refid="org.jboss.kernel:jboss-jmx-mc-int:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-spi:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-persistence:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-domain:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-core:jar"/>
+      <fileset refid="javax.inject:javax.inject:jar"/>
+      <fileset refid="org.jboss:jboss-vfs:jar"/>
+      <fileset refid="trove:trove:jar"/>
+      <fileset refid="com.sun.xml.bind:jaxb-impl:jar"/>
+      <fileset refid="com.sun.xml.bind:jaxb-xjc:jar"/>
+      <fileset refid="org.codehaus.woodstox:wstx-lgpl:jar"/>
+      <fileset refid="org.jboss.aop:jboss-aop-asintegration-core:jar"/>
+      <fileset refid="org.jboss.aop:jboss-aop-asintegration-mc:jar"/>
+      <fileset refid="org.jboss.aop:jboss-aop-deployers:jar"/>
+      <fileset refid="gnu-getopt:getopt:jar"/>
+      <fileset refid="xerces:xercesImpl:jar"/>
+      <fileset refid="xml-resolver:xml-resolver:jar"/>
+      <fileset refid="org.jboss:jbossxb:jar"/>
+      <fileset refid="org.picketbox:jboss-security-spi:jar"/>
+      <fileset refid="org.picketbox:jbosssx:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- Copy the generated client libraries -->
+    <mkdir dir="${install.client}"/>
+    <copy todir="${install.client}" filtering="no">
+      <fileset refid="asm:asm:jar"/>
+      <fileset refid="antlr:antlr:jar"/>
+      <fileset refid="apache-xalan:xalan:jar"/>
+      <fileset refid="apache-xalan:serializer:jar"/>
+      <fileset refid="xerces:xercesImpl:jar"/>
+      <fileset refid="xml-resolver:xml-resolver:jar"/>
+      <fileset refid="org.apache.cxf:cxf-api:jar"/>
+      <fileset refid="org.apache.cxf:cxf-common-schemas:jar"/>
+      <fileset refid="org.apache.cxf:cxf-common-utilities:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-coloc:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-http:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-object:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-soap:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-bindings-xml:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-core:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-databinding-aegis:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-databinding-jaxb:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-frontend-jaxws:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-frontend-simple:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-management:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-http:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-jms:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-transports-local:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-addr:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-policy:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-rm:jar"/>
+      <fileset refid="org.apache.cxf:cxf-rt-ws-security:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-common:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-java2ws:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-validator:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-core:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-databinding-jaxb:jar"/>
+      <fileset refid="org.apache.cxf:cxf-tools-wsdlto-frontend-jaxws:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-dv:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-ts:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-boolean:jar"/>
+      <fileset refid="org.apache.cxf.xjcplugins:cxf-xjc-bug671:jar"/>
+      <fileset refid="org.apache.neethi:neethi:jar"/>
+      <fileset refid="org.apache.velocity:velocity:jar"/>
+      <fileset refid="org.apache.ws.commons.schema:XmlSchema:jar"/>
+      <fileset refid="org.apache.ws.security:wss4j:jar"/>
+      <fileset refid="org.apache:xmlsec:jar"/>
+      <fileset refid="wsdl4j:wsdl4j:jar"/>
+      <fileset refid="javassist:javassist:jar"/>
+      <fileset refid="javax.enterprise:cdi-api:jar"/>
+      <fileset refid="javax.inject:javax.inject:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool-scoped:jar"/>
+      <fileset refid="org.jboss.classpool:jboss-classpool-jbosscl:jar"/>
+      <fileset refid="org.jboss:jboss-common-core:jar"/>
+      <fileset refid="org.jboss.logging:jboss-logging:jar"/>
+      <fileset refid="org.slf4j:slf4j-api:jar"/>
+      <fileset refid="org.slf4j:jcl-over-slf4j:jar"/>
+      <fileset refid="org.jboss.slf4j:slf4j-jboss-logging:jar"/>
+      <fileset refid="org.jboss.integration:jboss-integration:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-ext-api:jar"/>
+      <fileset refid="org.picketbox:jboss-security-spi:jar"/>
+      <fileset refid="org.jboss.naming:jnp-client:jar"/>
+      <fileset refid="org.picketbox:jbosssx-client:jar"/>
+      <fileset refid="org.jboss.spec.javax.annotation:jboss-annotations-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.ejb:jboss-ejb-api_3.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.el:jboss-el-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.enterprise.deploy:jboss-jad-api_1.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.jms:jboss-jms-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.resource:jboss-connector-api_1.5_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.security.auth.message:jboss-jaspi-api_1.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet:jboss-servlet-api_3.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.servlet.jsp:jboss-jsp-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.bind:jboss-jaxb-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.registry:jboss-jaxr-api_1.0_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.rpc:jboss-jaxrpc-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.ws:jboss-jaxws-api_2.2_spec:jar"/>
+      <fileset refid="org.jboss.mx:jboss-j2se:jar"/>
+      <fileset refid="org.jboss.mx:jboss-jmx-annotations:jar"/>
+      <fileset refid="org.jboss.mx:jboss-jmx:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-common:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-client:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ear:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ejb:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-rar:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-war:jar"/>
+      <fileset refid="org.jboss:jboss-mdr:jar"/>
+      <fileset refid="org.jboss.man:jboss-managed:jar"/>
+      <fileset refid="org.jboss.man:jboss-metatype:jar"/>
+      <fileset refid="org.jboss.profileservice:jboss-profileservice-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-client:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-client-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-core:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-core-spi:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-vfs:jar"/>
+      <fileset refid="org.jboss.deployers:jboss-deployers-vfs-spi:jar"/>
+      <fileset refid="org.jboss.remoting:jboss-remoting:jar"/>
+      <fileset refid="org.jboss.marshalling:jboss-marshalling:jar"/>
+      <fileset refid="org.jboss.marshalling:jboss-marshalling-river:jar"/>
+      <fileset refid="javax.jws:jsr181-api:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-client:jar"/>
+      <fileset refid="org.jboss.ws.cxf:jbossws-cxf-transports-httpserver:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-common:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-framework:jar"/>
+      <fileset refid="org.jboss.ws:jbossws-spi:jar"/>
+      <fileset refid="org.jboss.ws.native:jbossws-native-core:jar"/>
+      <fileset refid="org.jboss.ws.projects:jaxws-httpserver-httpspi:jar"/>
+      <fileset refid="jboss:jboss-serialization:jar"/>
+      <fileset refid="org.jboss.cluster:jboss-ha-client:jar"/>
+      <fileset refid="javax.activation:activation:jar"/>
+      <fileset refid="javax.mail:mail:jar"/>
+      <fileset refid="com.sun.xml.bind:jaxb-impl:jar"/>
+      <fileset refid="com.sun.xml.bind:jaxb-xjc:jar"/>
+      <fileset refid="com.sun.xml.ws:jaxws-tools:jar"/>
+      <fileset refid="com.sun.xml.ws:jaxws-rt:jar"/>
+      <fileset refid="sun-jaxws:stax-ex:jar"/>
+      <fileset refid="com.sun.xml.stream.buffer:streambuffer:jar"/>
+      <fileset refid="trove:trove:jar"/>
+      <fileset refid="org.codehaus.woodstox:wstx-lgpl:jar"/>
+      <fileset refid="com.sun.xml.ws:policy:jar"/>
+      <fileset refid="org.hibernate:hibernate-core:jar"/>
+      <fileset refid="org.hibernate:hibernate-commons-annotations:jar"/>
+      <fileset refid="org.hibernate:hibernate-validator:jar"/>
+      <fileset refid="org.hibernate.javax.persistence:hibernate-jpa-2.0-api:jar"/>
+      <fileset refid="javax.validation:validation-api:jar"/>
+      <fileset refid="org.jboss.aop:jboss-aop:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-ext-api:jar"/>
+      <!-- For JSR-250 impl -->
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-ext-api-impl:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-common:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-core:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-impl:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-spi:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-proxy-clustered:jar:client"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-security:jar:client"/>
+      <fileset refid="org.jboss.ejb3.context:jboss-ejb3-context-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.embedded:jboss-ejb3-embedded-standalone:jar"/>
+      <fileset refid="org.jboss.ejb3.singleton:jboss-ejb3-singleton-proxy-impl:jar"/>
+      <fileset refid="org.jboss.ejb3.async:jboss-ejb3-async-spi:jar"/>
+      <fileset refid="org.jboss.ejb3.async:jboss-ejb3-async-impl:jar"/>
+      <fileset refid="log4j:log4j:jar"/>
+      <fileset refid="gnu-getopt:getopt:jar"/>
+      <fileset refid="oswego-concurrent:concurrent:jar"/>
+      <fileset refid="org.picketbox:jbosssx-client:jar"/>
+      <fileset refid="org.apache.ws.scout:scout:jar"/>
+      <fileset refid="jacorb:jacorb:jar"/>
+      <fileset refid="logkit:logkit:jar"/>
+      <fileset refid="sun-fi:FastInfoset:jar"/>
+      <fileset refid="commons-beanutils:commons-beanutils:jar"/>
+      <fileset refid="commons-collections:commons-collections:jar"/>
+      <fileset refid="commons-lang:commons-lang:jar"/>
+      <fileset refid="stax:stax-api:jar"/>
+      <fileset refid="org.codehaus.jettison:jettison:jar"/>
+      <fileset refid="org.jboss.netty:netty:jar"/>
+      <fileset refid="org.jboss.weld:weld-api:jar"/>
+      <fileset refid="org.jboss.interceptor:jboss-interceptor-spi:jar"/>
+      <fileset refid="org.jboss.interceptor:jboss-interceptor-core:jar"/>
+      <fileset refid="org.hornetq:hornetq-core-client:jar"/>
+      <fileset refid="org.hornetq:hornetq-jms-client:jar"/>
+      <fileset refid="org.jboss:jbossxb:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+    <!-- Install jboss-remoting 3.x as jboss-remoting-3.jar -->
+    <copy todir="${install.client}" filtering="no">
+      <fileset refid="org.jboss.remoting3:jboss-remoting:jar"/>
+      <chainedmapper>
+        <mapper refid="remove-versions" />
+        <globmapper from="*.jar" to="*-3.jar"/>
+      </chainedmapper>
+    </copy>
+
+    <!-- Copy thirdparty code to lib/endorsed -->
+    <mkdir dir="${install.lib}/endorsed"/>
+    <copy todir="${install.lib}/endorsed" filtering="no">
+      <fileset refid="org.jboss.spec.javax.annotation:jboss-annotations-api_1.1_spec:jar"/>
+      <fileset refid="org.jboss.spec.javax.xml.bind:jboss-jaxb-api_2.2_spec:jar"/>
+      <fileset refid="javax.activation:activation:jar"/>
+      <fileset refid="stax:stax-api:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- avoid the duplicate copying of jaxb/stax apis from jbossws macros -->
+    <delete file="${install.lib}/jaxb-api.jar"/>
+    <delete file="${install.lib}/stax-api.jar"/>
+
+    <!-- Unpack the javaee dtds/schemas from jboss-metadata.jar -->
+    <mkdir dir="${install.dtd}"/>
+    <mkdir dir="${install.schema}"/>
+    <unzip dest="${install.docs}">
+      <fileset refid="org.jboss.metadata:jboss-metadata-client:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-common:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ear:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-ejb:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-rar:jar"/>
+      <fileset refid="org.jboss.metadata:jboss-metadata-war:jar"/>
+      <patternset>
+        <include name="dtd/*"/>
+        <include name="schema/*"/>
+      </patternset>
+    </unzip>
+
+    <!-- in in JTS mode the client needs some impl classes to make ClientUserTransaction work -->
+    <copy todir="${install.client}" filtering="no">
+      <fileset refid="org.jboss.jbossts:jbossjts:jar"/>
+      <fileset refid="org.jboss.jbossts:jbossjts-integration:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <unzip src="${jacorb:resources:jar}" dest="${install.all.conf}">
+      <patternset>
+        <include name="resources/jacorb.properties"/>
+      </patternset>
+      <mapper type="flatten"/>
+    </unzip>
+
+    <mkdir dir="${install.examples}/transactions"/>
+    <copy todir="${install.examples}/transactions" filtering="no">
+      <fileset refid="org.jboss.jbossts:jbossts-tools:sar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <copy todir="${install.examples}/transactions" filtering="no">
+      <fileset refid="org.jboss.jbossts:jbossxts:sar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- copy JBossTS additions install script and instructions from jbossas-transactions module -->
+    <copy todir="${install.examples}/transactions" filtering="no">
+      <fileset dir="${project.root}/jbossas-transactions">
+        <include name="README.txt"/>
+        <include name="build.xml"/>
+        <include name="transaction-jboss-beans-for-jts.xml"/>
+      </fileset>
+    </copy>
+
+    <chmod perm="+x">
+      <fileset dir="${install.bin}">
+        <include name="*.sh"/>
+      </fileset>
+    </chmod>
+
+    <copy todir="${install.server}/all/deployers" filtering="no">
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-endpoint-deployer:jar"/>
+      <fileset refid="org.jboss.ejb3:jboss-ejb3-metrics-deployer:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <unzip dest="${install.server}/all/deployers"
+            src="${project.root}/weld-int/assembly/target/distribution/weld-int-deployer-assembly.zip"/>
+
+    <!-- Install Admin Console -->
+    <mkdir dir="${install.common.deploy}/admin-console.war"/>
+    <unjar src="${org.jboss.jopr:jopr-embedded-jbas6:war}"
+          dest="${install.common.deploy}/admin-console.war"/>
+
+    <!-- Copy varia stuff -->
+
+    <!-- Include the juddi sar unpacked -->
+    <mkdir dir="${install.server}/all/deploy/juddi-service.sar"/>
+    <unjar src="${org.jboss.jaxr:juddi-service:sar}"
+         dest="${install.server}/all/deploy/juddi-service.sar" />
+
+    <!-- copy scout.jar and juddi.jar to juddi-service.sar directory -->
+    <copy todir="${install.server}/all/deploy/juddi-service.sar" filtering="no">
+      <fileset refid="org.apache.ws.scout:scout:jar"/>
+      <fileset refid="juddi:juddi:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- Create optional libs; e.g. seam-integration -->
+    <mkdir dir="${install.server}/all/deployers/seam.deployer/lib-int"/>
+    <copy todir="${install.server}/all/deployers/seam.deployer/lib-int" filtering="no">
+      <fileset refid="org.jboss.seam.integration:jboss-seam-int-jbossas:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- copy the threads deployer files into their proper places -->
+    <mkdir dir="${install.server}/all/deployers/jboss-threads.deployer/META-INF"/>
+    <copy todir="${install.server}/all/deployers/jboss-threads.deployer">
+      <fileset refid="org.jboss.threads:jboss-threads-metadata:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- copy the logging deployer files into their proper places -->
+    <mkdir dir="${install.server}/all/deployers/jboss-logging.deployer/META-INF"/>
+    <copy todir="${install.server}/all/deployers/jboss-logging.deployer">
+      <fileset refid="org.jboss.logging:logging-service-metadata:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- copy the remoting deployer files into their proper places -->
+    <mkdir dir="${install.server}/all/deployers/jboss-remoting.deployer/META-INF"/>
+    <copy todir="${install.server}/all/deployers/jboss-remoting.deployer">
+      <fileset refid="org.jboss.remoting3:jboss-remoting-metadata:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <!-- copy the xnio deployer files into their proper places -->
+    <mkdir dir="${install.server}/all/deploy/xnio-provider.jar/META-INF"/>
+    <copy todir="${install.server}/all/deploy/xnio-provider.jar">
+      <fileset refid="org.jboss.xnio:xnio-nio:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+
+    <mkdir dir="${install.server}/all/deployers/xnio.deployer/META-INF"/>
+    <copy todir="${install.server}/all/deployers/xnio.deployer">
+      <fileset refid="org.jboss.xnio:xnio-metadata:jar"/>
+      <mapper refid="remove-versions" />
+    </copy>
+  	
+  	<!-- Copy jpa-mcint jar to deployers folder -->
+  	<copy todir="${install.server}/all/deployers"> 
+  		<fileset refid="org.jboss.jpa:jboss-jpa-mcint:jar"/>
+  		<mapper refid="remove-versions"/>
+  	</copy>
+
+	<!-- Copy jboss-injection jboss-beans.xml to deployers folder -->
+	<unjar src="${org.jboss.injection:jboss-injection-mc-impl:jar}" dest="${install.all.deployers}">
+		<patternset>
+      		<include name="META-INF/jboss-injection-jboss-beans.xml"/>
+		</patternset>
+	    <mapper type="flatten"/> 
+	</unjar>
+      
+    <!-- End varia stuff -->
+  </target>
+
+</project>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<jboss xmlns="http://www.jboss.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee http://www.jboss.org/j2ee/schema/jboss_5_0.xsd" version="3.0">
+  <enterprise-beans>
+    <session>
+      <ejb-name>DisableClusteredAnnotationStateless</ejb-name>
+      <clustered>false</clustered>
+      <cache-config>
+        <cache-name>${jbosstest.cluster.sfsb.cache.config:sfsb-cache}</cache-name>
+      </cache-config>
+    </session>
+    <session>
+      <ejb-name>DisableClusteredAnnotationStateful</ejb-name>
+      <clustered>false</clustered>
+      <cache-config>
+        <cache-name>${jbosstest.cluster.sfsb.cache.config:sfsb-cache}</cache-name>
+      </cache-config>
+    </session>
+  </enterprise-beans>
+</jboss>

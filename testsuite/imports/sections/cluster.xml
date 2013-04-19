@@ -1,0 +1,1012 @@
+
+
+<project name="tests-cluster-jars">
+	
+   <target name="_jars-cluster" depends="compile-resources">
+      <war warfile="${build.lib}/dist-ss.war"
+         webxml="${build.resources}/cluster/web/web.xml">
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/*"/>
+         </classes>
+      </war>
+      
+      <jar jarfile="${build.lib}/clusteredserviceejb.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredservice/*.class"/>
+            <exclude name="org/jboss/test/cluster/ejb3/clusteredservice/ServiceWeb.class"/>
+         </fileset>
+      </jar>
+
+      <war warfile="${build.lib}/clusteredservice.war"
+         webxml="${build.resources}/cluster/ejb3/clusteredservice/WEB-INF/web.xml">  
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredservice/servlets/*.class"/>
+            <include name="org/jboss/test/cluster/ejb3/clusteredservice/ServiceRemote.class"/>
+            <include name="org/jboss/test/cluster/ejb3/clusteredservice/ServiceWeb.class"/>
+         </classes>
+      </war>
+
+      <jar destfile="${build.lib}/ds-tests.sar">
+         <metainf dir="${build.resources}/cluster/ds">
+            <include name="jboss-service.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hapartition/ds/*"/>
+            <include name="org/jboss/test/cluster/multicfg/test/*_Stub.class"/>
+         </fileset>
+      </jar>
+      
+      <jar destfile="${build.lib}/drm-tests.sar">
+         <metainf dir="${build.resources}/cluster/drm">
+            <include name="jboss-service.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hapartition/drm/*"/>
+            <include name="org/jboss/test/cluster/multicfg/test/*_Stub.class"/>
+         </fileset>
+      </jar>
+      
+      <jar destfile="${build.lib}/rpc-tests.sar">
+         <metainf dir="${build.resources}/cluster/rpc">
+            <include name="jboss-service.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hapartition/rpc/*"/>
+         </fileset>
+      </jar>
+      
+      <jar destfile="${build.lib}/rpc-cl-tests.sar">
+         <metainf dir="${build.resources}/cluster/rpc-cl">
+            <include name="jboss-service.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hapartition/rpc/*"/>
+         </fileset>
+      </jar>
+
+    <jar destfile="${build.lib}/partitionstatetransfer.sar">
+       <metainf dir="${build.resources}/cluster/partition">
+          <include name="jboss-beans.xml"/>
+       </metainf>
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/hapartition/state/*"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/ejb2/passexp">
+          <include name="META-INF/passexp-stacks.xml"/>
+       </fileset>
+    </jar>
+      
+      <!-- Deployments for testing Clustered DeploymentRepository (i.e. farming) -->
+      <copy todir="${build.lib}" overwrite="true">
+         <fileset dir="${build.resources}/cluster/profileservice"/>
+         <fileset dir="${build.resources}/cluster/farm/hotdeploy"/>
+      </copy>
+   	
+   	<mkdir dir="${build.resources}/test-configs/cluster-profilesvc-0/farm"/>
+   	<mkdir dir="${build.resources}/test-configs/cluster-profilesvc-1/farm"/>
+   	
+   	<war warfile="${build.resources}/test-configs/cluster-profilesvc-0/farm/farmE.war">
+         <fileset dir="${source.resources}/test-configs/cluster-profilesvc-0/farm/farmA.war">
+            <include name="**/*"/>
+         </fileset>
+      </war>
+      
+      <war warfile="${build.resources}/test-configs/cluster-profilesvc-1/farm/farmF.war">
+         <fileset dir="${source.resources}/test-configs/cluster-profilesvc-1/farm/farmB.war">
+            <include name="**/*"/>
+         </fileset>
+      </war>
+   	
+   	<copy file="${build.resources}/test-configs/cluster-profilesvc-0/farm/farmE.war"
+   	     tofile="${build.lib}/hd-add-zipped.war"/>
+   	
+   	<copy file="${build.lib}/hd-add-zipped.war" tofile="${build.lib}/hd-mod-zipped.war"/>
+   	<copy file="${build.lib}/hd-mod-zipped.war" tofile="${build.resources}/test-configs/cluster-profilesvc-0/farm/hd-mod-zipped.war"/>
+      <copy file="${build.lib}/hd-mod-zipped.war" tofile="${build.resources}/test-configs/cluster-profilesvc-1/farm/hd-mod-zipped.war"/>
+      
+      <!-- MC beans for testing partition restart -->
+      <copy todir="${build.lib}"
+         file="${build.resources}/cluster/partition/partition-restart-jboss-beans.xml"
+         overwrite="true"/>
+      
+      <!-- EJBs for testing partition restart -->
+      <jar destfile="${build.lib}/partition-restart.jar">
+         <fileset dir="${build.classes}">
+            <patternset refid="jboss.test.util.ejb.set"/>
+            <include name="org/jboss/test/testbean/interfaces/**"/>
+            <include name="org/jboss/test/testbean/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/interfaces/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/bean/**"/>
+            <include name="org/somepackage/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/partition">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+   	
+   	<!--beans for testing HASingletonDeployerTestCase -->
+      <copy todir="${build.lib}"
+           file="${build.resources}/cluster/hasingleton/deployer/test-deploy-hasingleton-jboss-beans.xml"
+           overwrite="true"/>
+    
+      <!--sar for testing HASingletonElectionPolicy -->
+   	<jar destfile="${build.lib}/ha-singleton-election.sar">
+         <metainf dir="${build.resources}/cluster/hasingleton/electionpolicy">
+            <include name="ha-electionpolicy-jboss-beans.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hasingleton/*Example*.class"/>
+         </fileset>
+      </jar> 
+   	
+   	<!--beans for testing HASingletonControllerBeanUnitTestCase -->
+   	<jar destfile="${build.lib}/ha-singleton-pojo.sar">
+         <metainf dir="${build.resources}/cluster/hasingleton/">
+            <include name="ha-singleton-jboss-beans.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/hasingleton/*Example*.class"/>
+         </fileset>
+      </jar> 
+      
+   	<!--beans for testing HAServiceUnitTestCase, HASingletonUnitTestCase -->
+    <jar destfile="${build.lib}/ha-service.sar">
+       <metainf dir="${build.resources}/cluster/haservice">
+          <include name="*.xml"/>
+       </metainf>
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/haservice/**"/>
+       </fileset>
+    </jar>
+      
+      <!-- ha-invoker adaptor sar -->
+      <jar destfile="${build.lib}/ha-invoker.sar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/invokerha/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/invokerha/">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+      
+      <!-- The cross-server.jar ejb jar -->
+      <zip destfile="${build.lib}/cross-server.jar">
+         <zipfileset dir="${build.resources}/cluster/cross-server"
+            prefix="META-INF"/>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb2/crossserver/*"/>
+         </fileset>
+      </zip>
+
+   	<!-- Remote interface to JBoss Cache -->
+    <jar destfile="${build.lib}/jbosscache-helper.sar">
+       <metainf dir="${build.resources}/cluster/web/cachehelper">
+          <include name="jboss-beans.xml"/>
+       </metainf>
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+          <include name="org/jboss/test/cluster/web/TestConfigurationAdder.class"/>
+       </fileset>
+    </jar>
+   	
+      <!-- build httpsessionreplication.jar -->
+      <war warfile="${build.lib}/http-sr.war"
+         webxml="${build.resources}/cluster/http/http-sr/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-sr/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <fileset dir="${build.resources}/cluster/http">
+            <include name="*.jsp"/>
+         </fileset>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+         </classes>
+      </war>
+
+   	<!-- build http-default.war (copy of http-sr, w/out jboss-web.xml) -->
+    <war warfile="${build.lib}/http-default.war"
+         webxml="${build.resources}/cluster/http/http-sr/WEB-INF/web.xml">
+       <fileset dir="${build.resources}/cluster/http">
+          <include name="*.jsp"/>
+       </fileset>
+       <classes dir="${build.classes}">
+          <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+          <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+       </classes>
+    </war>
+   	
+      <!-- build http-jk.jar -->
+      <war warfile="${build.lib}/http-jk.war"
+         webxml="${build.resources}/cluster/http/http-jk/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-jk/WEB-INF">
+            <include name="jboss-web.xml"/>
+            <include name="context.xml"/>
+         </webinf>
+         <fileset dir="${build.resources}/cluster/http/http-jk">
+            <include name="*.jsp"/>
+         </fileset>
+        <classes dir="${build.classes}">
+           <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+        </classes>
+      </war>
+
+      <!-- build http-scoped.jar -->
+      <copy
+         tofile="${build.resources}/cluster/http/http-scoped/WEB-INF/jboss-web.xml"
+         file="${build.resources}/cluster/http/http-scoped/jboss-web.xml"
+         overwrite="true"/>
+      
+      <war warfile="${build.lib}/http-scoped.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-scoped/WEB-INF">
+            <include name="jboss-web.xml"/>
+            <include name="context.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include
+               name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include
+               name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <!-- build http-scoped-attr.jar -->
+      <copy
+         tofile="${build.resources}/cluster/http/http-scoped/WEB-INF/jboss-web.xml"
+         file="${build.resources}/cluster/http/http-scoped/jboss-web-attr-based.xml"
+         overwrite="true"/>
+      
+      <war warfile="${build.lib}/http-scoped-attr.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-scoped/WEB-INF">
+            <include name="jboss-web.xml"/>
+            <include name="context.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include
+               name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include
+               name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <!-- build http-scoped-set.jar -->
+      <copy
+         tofile="${build.resources}/cluster/http/http-scoped/WEB-INF/jboss-web.xml"
+         file="${build.resources}/cluster/http/http-scoped/jboss-web-set-trigger.xml"
+         overwrite="true"/>
+      
+      <war warfile="${build.lib}/http-scoped-set.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-scoped/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include
+               name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include
+               name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <!-- build http-scoped-set-attr.jar -->
+      <copy
+         tofile="${build.resources}/cluster/http/http-scoped/WEB-INF/jboss-web.xml"
+         file="${build.resources}/cluster/http/http-scoped/jboss-web-attr-set.xml"
+         overwrite="true"/>
+      
+      <war warfile="${build.lib}/http-scoped-set-attr.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/http-scoped/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include
+               name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include
+               name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+    
+    <!-- build http-cross-ctx-first.jar -->
+    <war warfile="${build.lib}/http-cross-ctx-first.war"
+       webxml="${build.resources}/cluster/http/http-cross-ctx-first/WEB-INF/web.xml">
+       <webinf dir="${build.resources}/cluster/http/http-cross-ctx-first/WEB-INF">
+          <include name="jboss-web.xml"/>
+          <include name="context.xml"/>
+       </webinf>
+        <classes dir="${build.classes}">
+           <include name="org/jboss/test/cluster/web/Person.class"/>
+           <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+           <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+           <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+        </classes>
+       <fileset dir="${build.resources}/cluster/http/http-cross-ctx-first">
+          <include name="*.jsp"/>
+       </fileset>
+    </war>
+    
+    <!-- build http-cross-ctx-second.jar -->
+    <war warfile="${build.lib}/http-cross-ctx-second.war"
+       webxml="${build.resources}/cluster/http/http-cross-ctx-second/WEB-INF/web.xml">
+       <webinf dir="${build.resources}/cluster/http/http-cross-ctx-second/WEB-INF">
+          <include name="jboss-web.xml"/>
+          <include name="context.xml"/>
+       </webinf>
+        <classes dir="${build.classes}">
+           <include name="org/jboss/test/cluster/web/Person.class"/>
+           <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+           <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+           <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+        </classes>
+       <fileset dir="${build.resources}/cluster/http/http-cross-ctx-second">
+          <include name="*.jsp"/>
+       </fileset>
+    </war>
+    
+    <!-- build http-cross-ctx-third.jar -->
+    <war warfile="${build.lib}/http-cross-ctx-third.war"
+       webxml="${build.resources}/cluster/http/http-cross-ctx-third/WEB-INF/web.xml">
+       <webinf dir="${build.resources}/cluster/http/http-cross-ctx-third/WEB-INF">
+          <include name="jboss-web.xml"/>
+          <include name="context.xml"/>
+       </webinf>
+        <classes dir="${build.classes}">
+           <include name="org/jboss/test/cluster/web/Person.class"/>
+           <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+           <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+           <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+        </classes>
+       <fileset dir="${build.resources}/cluster/http/http-cross-ctx-third">
+          <include name="*.jsp"/>
+       </fileset>
+    </war>
+   	
+    <ear earfile="${build.lib}/http-cross-ctx.ear"
+       appxml="${build.resources}/cluster/http/application.xml">
+       <fileset dir="${build.lib}">
+          <include name="http-cross-ctx-first.war"/>
+          <include name="http-cross-ctx-second.war"/>
+          <include name="http-cross-ctx-third.war"/>
+       </fileset>
+    </ear>
+    
+    <!-- Session passivation test wars --> 
+      
+      <war warfile="${build.lib}/http-session-pass.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/passivation/SESSION">
+            <include name="*"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <war warfile="${build.lib}/http-attr-pass.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/http/passivation/ATTRIBUTE">
+            <include name="*"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+
+      <!-- Build clustered classloader leak test archives -->
+         
+       <war destfile="${build.lib}/cluster-clleak-simple.war"
+           webxml="${build.resources}/cluster/classloader/leak/war/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/classloader/leak/war/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/classloader/leak/web/*"/>
+            <include name="org/jboss/test/cluster/classloader/leak/web/*"/>
+         </classes>
+       </war>      
+       <war destfile="${build.lib}/cluster-clleak-nopass.war"
+          webxml="${build.resources}/cluster/classloader/leak/war/nopass/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/classloader/leak/war/nopass/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/classloader/leak/web/*"/>
+            <include name="org/jboss/test/cluster/classloader/leak/web/*"/>
+         </classes>
+       </war>
+   	 <war destfile="${build.lib}/cluster-clleak-simple-replicable.war"
+           webxml="${build.resources}/cluster/classloader/leak/war/replicable/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/classloader/leak/war/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/classloader/leak/web/*"/>
+            <include name="org/jboss/test/classloader/leak/aop/*"/>
+            <include name="org/jboss/test/cluster/classloader/leak/web/*"/>
+         </classes>
+       </war>
+   	 <war destfile="${build.lib}/cluster-clleak-simple-ejb.war"
+           webxml="${build.resources}/cluster/classloader/leak/war/ejb2/WEB-INF/web.xml">
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/classloader/leak/web/*"/>
+            <include name="org/jboss/test/classloader/leak/aop/*"/>
+            <include name="org/jboss/test/cluster/classloader/leak/web/*"/>
+         </classes>
+       </war>
+       <jar destfile="${build.lib}/cluster-clleak-ejb.jar"
+         manifest="${build.resources}/cluster/classloader/leak/ejb/META-INF/MANIFEST.MF">
+         <metainf dir="${build.resources}/cluster/classloader/leak/ejb/META-INF"/>
+         <fileset dir="${build.classes}">
+           <include name="org/jboss/test/classloader/leak/ejb/**"/>
+         </fileset>
+       </jar>
+      <ear destfile="${build.lib}/cluster-clleak-simple.ear"
+        appxml="${build.resources}/cluster/classloader/leak/ear/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="cluster-clleak-simple-ejb.war"/>
+            <include name="cluster-clleak-ejb.jar"/>
+         </fileset>
+       </ear>
+      <ear destfile="${build.lib}/cluster-clleak-simple-isolated.ear"
+        appxml="${build.resources}/cluster/classloader/leak/ear/META-INF/application.xml">
+         <metainf dir="${build.resources}/cluster/classloader/leak/ear/META-INF">
+            <include name="jboss-app.xml"/>
+         </metainf>
+         <fileset dir="${build.lib}">
+            <include name="cluster-clleak-simple-ejb.war"/>
+            <include name="cluster-clleak-ejb.jar"/>
+         </fileset>
+       </ear>  
+      <ear destfile="${build.lib}/cluster-clleak-noweb.ear"
+        appxml="${build.resources}/cluster/classloader/leak/ear/META-INF/application-noweb.xml">
+         <fileset dir="${build.lib}">
+            <include name="cluster-clleak-ejb.jar"/>
+         </fileset>
+       </ear>
+      <ear destfile="${build.lib}/cluster-clleak-noweb-isolated.ear"
+        appxml="${build.resources}/cluster/classloader/leak/ear/META-INF/application-noweb.xml">
+         <metainf dir="${build.resources}/cluster/classloader/leak/ear/META-INF">
+            <include name="jboss-app.xml"/>
+         </metainf>
+         <fileset dir="${build.lib}">
+            <include name="cluster-clleak-ejb.jar"/>
+         </fileset>
+       </ear> 
+      
+      <!-- DataSourcePersistentManager Tests -->
+      <copy todir="${build.lib}"
+         file="${build.resources}/cluster/persistent/httpsession-ds.xml"
+         overwrite="true"/>
+      
+      <jar destfile="${build.lib}/disable-manager-override.beans">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/persistent/ManagerOverrideDisabler.class"/>
+         </fileset>
+         <metainf dir="${build.resources}/cluster/persistent/">
+            <include name="disable-manager-override-jboss-beans.xml"/>
+         </metainf>
+      </jar>
+      
+      <!-- build http-cross-ctx-first-persistent.jar -->
+      <war warfile="${build.lib}/http-cross-ctx-first-persistent.war"
+         webxml="${build.resources}/cluster/http/http-cross-ctx-first/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/persistent/WEB-INF">
+            <include name="context.xml"/>
+         </webinf>
+          <classes dir="${build.classes}">
+             <include name="org/jboss/test/cluster/web/Person.class"/>
+             <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+             <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+             <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+          </classes>
+         <fileset dir="${build.resources}/cluster/http/http-cross-ctx-first">
+            <include name="*.jsp"/>
+         </fileset>
+      </war>
+      
+      <!-- build http-cross-ctx-second-persistent.jar -->
+      <war warfile="${build.lib}/http-cross-ctx-second-persistent.war"
+         webxml="${build.resources}/cluster/http/http-cross-ctx-second/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/persistent/WEB-INF">
+            <include name="context.xml"/>
+         </webinf>
+          <classes dir="${build.classes}">
+             <include name="org/jboss/test/cluster/web/Person.class"/>
+             <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+             <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+             <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+          </classes>
+         <fileset dir="${build.resources}/cluster/http/http-cross-ctx-second">
+            <include name="*.jsp"/>
+         </fileset>
+      </war>
+      
+      <!-- build http-cross-ctx-third-persistent.jar -->
+      <war warfile="${build.lib}/http-cross-ctx-third-persistent.war"
+         webxml="${build.resources}/cluster/http/http-cross-ctx-third/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/persistent/WEB-INF">
+            <include name="context.xml"/>
+         </webinf>
+          <classes dir="${build.classes}">
+             <include name="org/jboss/test/cluster/web/Person.class"/>
+             <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+             <include name="org/jboss/test/cluster/web/BindingListener.class"/>
+             <include name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+          </classes>
+         <fileset dir="${build.resources}/cluster/http/http-cross-ctx-third">
+            <include name="*.jsp"/>
+         </fileset>
+      </war>
+        
+      <ear earfile="${build.lib}/http-cross-ctx-persistent.ear"
+         appxml="${build.resources}/cluster/persistent/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="http-cross-ctx-first-persistent.war"/>
+            <include name="http-cross-ctx-second-persistent.war"/>
+            <include name="http-cross-ctx-third-persistent.war"/>
+         </fileset>
+      </ear>
+      
+      <war warfile="${build.lib}/http-scoped-persistent.war"
+         webxml="${build.resources}/cluster/http/http-scoped/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/persistent/WEB-INF">
+            <include name="context.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/Person.class"/>
+            <include name="org/jboss/test/cluster/web/CacheHelper*"/>
+            <include
+               name="org/jboss/test/cluster/web/BindingListener.class"/>
+            <include
+               name="org/jboss/test/cluster/web/DeserializationSensor.class"/>
+         </classes>
+         
+         <fileset dir="${build.resources}/cluster/http/http-scoped">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <war warfile="${build.lib}/http-formauth-persistent.war"
+         webxml="${build.resources}/cluster/persistent/formauth/WEB-INF/web.xml">
+         <webinf dir="${build.resources}/cluster/persistent/formauth/WEB-INF">
+            <include name="jboss-web.xml"/>
+            <include name="context.xml"/>
+         </webinf>
+         
+         <fileset dir="${build.resources}/cluster/persistent/formauth">
+            <include name="*.jsp"/>
+            <include name="*.html"/>
+         </fileset>
+      </war>
+      
+      <jar destfile="${build.lib}/rdbmsstore-tablesetup.jar">
+         <metainf dir="${build.resources}/cluster/persistent">
+            <include name="rdbmsstore-tablesetup-jboss-beans.xml"/>
+         </metainf>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/web/persistent/PersistentStoreTableSetup.class"/>
+         </fileset>
+      </jar>    
+   	
+   	<!-- JPA Clustered Second Level Cache -->
+      <jar jarfile="${build.lib}/clusteredentity-test.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/clusteredentity/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/clusteredentity">
+            <include name="META-INF/persistence.xml"/>
+         </fileset>
+      </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-optimistic-test.jar">
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/clusteredentity/*.class"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/optimistic">
+          <include name="META-INF/persistence.xml"/>
+       </fileset>
+    </jar>
+
+      <jar jarfile="${build.lib}/clusteredentity-classloader-test.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/clusteredentity/classloader/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+            <include name="META-INF/persistence.xml"/>
+         </fileset>
+      </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-classloader-optimistic-test.jar">
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/clusteredentity/classloader/*.class"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader/optimistic">
+          <include name="META-INF/persistence.xml"/>
+          <!--include name="META-INF/jboss.xml"/-->
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-classloader-test.ear">
+       <fileset dir="${build.lib}">
+          <include name="clusteredentity-classloader-test.jar"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+          <include name="META-INF/application.xml"/>
+          <include name="META-INF/jboss-app.xml"/>
+        <include name="clusteredentity-ds.xml"/>
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-classloader-optimistic-test.ear">
+       <fileset dir="${build.lib}">
+          <include name="clusteredentity-classloader-optimistic-test.jar"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+          <include name="META-INF/jboss-app.xml"/>
+          <include name="clusteredentity-ds.xml"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader/optimistic">
+          <include name="META-INF/application.xml"/>
+          <include name="META-INF/jboss-app.xml"/>
+          <include name="clusteredentity-ds.xml"/>
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-providedprefix-test.jar">
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/clusteredentity/classloader/*.class"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/providedprefix">
+          <include name="META-INF/persistence.xml"/>
+       </fileset>
+    </jar>
+
+  <jar jarfile="${build.lib}/clusteredentity-providedprefix-test.ear">
+     <fileset dir="${build.lib}">
+        <include name="clusteredentity-providedprefix-test.jar"/>
+     </fileset>
+     <fileset dir="${build.resources}/cluster/clusteredentity/providedprefix">
+        <include name="META-INF/application.xml"/>
+        <include name="META-INF/jboss-app.xml"/>
+      <include name="clusteredentity-ds.xml"/>
+     </fileset>
+     <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+        <include name="clusteredentity-ds.xml"/>
+     </fileset>
+  </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-embeddedid-test.jar">
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/clusteredentity/embeddedid/*.class"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+          <include name="META-INF/persistence.xml"/>
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-embeddedid-optimistic-test.jar">
+       <fileset dir="${build.classes}">
+          <include name="org/jboss/test/cluster/clusteredentity/embeddedid/*.class"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader/optimistic">
+          <include name="META-INF/persistence.xml"/>
+          <!--include name="META-INF/jboss.xml"/-->
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-embeddedid-test.ear">
+       <fileset dir="${build.lib}">
+          <include name="clusteredentity-embeddedid-test.jar"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+          <include name="META-INF/jboss-app.xml"/>
+          <include name="clusteredentity-ds.xml"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/embeddedid">
+         <include name="META-INF/application.xml"/>
+       </fileset>
+    </jar>
+
+    <jar jarfile="${build.lib}/clusteredentity-embeddedid-optimistic-test.ear">
+       <fileset dir="${build.lib}">
+          <include name="clusteredentity-embeddedid-optimistic-test.jar"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/classloader">
+          <include name="META-INF/jboss-app.xml"/>
+          <include name="clusteredentity-ds.xml"/>
+       </fileset>
+       <fileset dir="${build.resources}/cluster/clusteredentity/embeddedid/optimistic">
+         <include name="META-INF/application.xml"/>
+       </fileset>
+    </jar>
+
+      
+   </target>
+ 
+   <!-- testbeancluster test -->
+   <target name="_jars-testbeancluster" depends="compile-resources">
+      <mkdir dir="${build.lib}"/>
+      
+      <copy todir="${build.lib}"
+         file="${build.resources}/cluster/ejb2/basic/cif-ds.xml"
+         overwrite="true"/>
+
+      <!-- build testbeancluster.jar -->
+      <jar destfile="${build.lib}/testbeancluster.jar">
+         <fileset dir="${build.classes}">
+            <patternset refid="jboss.test.util.ejb.set"/>
+            <include name="org/jboss/test/testbean/interfaces/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/interfaces/**"/>
+            <include name="org/jboss/test/testbean/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/proxy/**"/>
+            <include name="org/somepackage/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb2/basic">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+
+      <!-- build sfsb-passexp.jar -->
+      <jar destfile="${build.lib}/sfsb-passexp1.jar">
+         <fileset dir="${build.classes}">
+            <patternset refid="jboss.test.util.ejb.set"/>
+            <include name="org/jboss/test/testbean/interfaces/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/interfaces/**"/>
+            <include name="org/jboss/test/testbean/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/proxy/**"/>
+            <include name="org/somepackage/**"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb2/passexp">
+            <include name="META-INF/ejb-jar.xml"/>
+            <include name="META-INF/jboss.xml"/>
+         </fileset>
+      </jar>
+   	
+   	<!-- build sfsb-passexp.sar -->
+   	<jar destfile="${build.lib}/sfsb-passexp.sar">
+         <fileset dir="${build.resources}/cluster/ejb2/passexp">
+            <include name="META-INF/partition-passexp-jboss-beans.xml"/>
+            <include name="META-INF/passexp-stacks.xml"/>
+         </fileset>
+      </jar>
+
+      <jar destfile="${build.lib}/test-cif.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/testbean/interfaces/AComplexPK.class"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/interfaces/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/bean/**"/>
+         </fileset>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/ejb-jar.xml" includes="cif-ejb-jar.xml"/>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/jboss.xml" includes="cif-jboss.xml"/>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/jbosscmp-jdbc.xml" includes="jbosscmp-jdbc.xml"/>
+      </jar>
+      <ear destfile="${build.lib}/test-cif.ear"
+         appxml="${build.resources}/cluster/ejb2/basic/application.xml">
+         <!--metainf dir="${build.resources}/cluster/ejb2/basic">
+            <include name="jboss-app.xml"/>
+         </metainf-->
+         <fileset dir="${build.lib}">
+            <include name="test-cif.jar"/>
+         </fileset>
+         <!--fileset dir="${build.resources}/cluster/ejb2/basic">
+            <include name="cif-ds.xml"/>
+         </fileset-->
+      </ear>
+
+      <jar destfile="${build.lib}/test-retry.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/testbean/interfaces/AComplexPK.class"/>
+            <include name="org/jboss/test/testbean/interfaces/**"/>
+            <include name="org/jboss/test/testbean/bean/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/interfaces/**"/>
+            <include name="org/jboss/test/cluster/ejb2/basic/bean/**"/>
+         </fileset>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/ejb-jar.xml" includes="retry-ejb-jar.xml"/>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/jboss.xml" includes="retry-jboss.xml"/>
+         <zipfileset dir="${build.resources}/cluster/ejb2/basic"
+            fullpath="META-INF/jbosscmp-jdbc.xml" includes="retry-jbosscmp-jdbc.xml"/>
+      </jar>
+      <ear destfile="${build.lib}/test-retry.ear"
+         appxml="${build.resources}/cluster/ejb2/basic/retry-application.xml">
+         <!--metainf dir="${build.resources}/cluster/ejb2/basic">
+            <include name="jboss-app.xml"/>
+         </metainf-->
+         <fileset dir="${build.lib}">
+            <include name="test-retry.jar"/>
+         </fileset>
+         <!--fileset dir="${build.resources}/cluster/ejb2/basic">
+            <include name="cif-ds.xml"/>
+         </fileset-->
+      </ear>
+
+      <!-- ustxsticky.jar -->
+      <zip destfile="${build.lib}/ustxsticky.jar">
+         <zipfileset dir="${build.resources}/cluster/ejb2/ustxsticky"/>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb2/ustxsticky/*"/>
+         </fileset>
+      </zip>    
+
+      <zip destfile="${build.lib}/rspfilter.sar">
+         <zipfileset dir="${build.resources}/cluster/rspfilter"/>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/rspfilter/*"/>
+         </fileset>
+      </zip>  
+      
+      <!-- clustered sfsb test archives -->
+      <jar jarfile="${build.lib}/clusteredsession-test.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/util/*.class"/>
+         </fileset>
+        <fileset dir="${build.classes}">
+           <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/*.class"/>
+        </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+      
+      <jar jarfile="${build.lib}/clusteredsession-nested.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/nested/base/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/nested/base/std/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/util/*.class"/>
+         </fileset>
+        <fileset dir="${build.classes}">
+           <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/*.class"/>
+        </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/std/*.class"/>
+         </fileset>
+      </jar>
+      
+      <copy todir="${build.lib}" file="${build.resources}/cluster/ejb3/clusteredsession/xpc/clusteredsession-ds.xml"/>
+      
+      <jar jarfile="${build.lib}/clusteredsession-xpc.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/nested/base/xpc/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/util/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/xpc/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/xpc">
+            <include name="META-INF/persistence.xml"/>
+         </fileset>
+      </jar>
+      
+      <jar jarfile="${build.lib}/clusteredsession-xpc-scoped.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/nested/base/xpc/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/util/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/*.class"/>
+         </fileset>
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/stateful/nested/base/xpc/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/xpc">
+            <include name="META-INF/persistence.xml"/>
+            <include name="META-INF/jboss.xml"/>
+         </fileset>
+      </jar>
+
+      <jar jarfile="${build.lib}/clusteredsession-local.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/islocal/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/islocal">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+
+	  <copy todir="${build.lib}">
+	     <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/islocal/foreign">
+	        <include name="testlocal-jboss-beans.xml"/>
+	     </fileset>
+	  </copy>
+	
+	  <jar jarfile="${build.lib}/ejbthree1136-bean.jar">
+	     <fileset dir="${build.classes}">
+	        <include name="org/jboss/test/cluster/ejb3/clusteredsession/ejbthree1136/DoNothing*.class"/>
+	     </fileset>
+	  </jar>
+	  <jar destfile="${build.lib}/ejbthree1136.sar">
+	     <metainf dir="${build.resources}/cluster/ejb3/clusteredsession/ejbthree1136">
+	        <include name="jboss-beans.xml"/>
+	     </metainf>
+	     <fileset dir="${build.classes}">
+	        <include name="org/jboss/test/cluster/ejb3/clusteredsession/ejbthree1136/SFSB*.class"/>
+	     </fileset>
+	  </jar>
+      
+      <jar jarfile="${build.lib}/ejbthree1346.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/ejbthree1346/*.class"/>
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/NodeAnswer.class"/>
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/util/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/ejbthree1346">
+            <include name="META-INF/*.xml"/>
+         </fileset>
+      </jar>
+      <jar jarfile="${build.lib}/ejbthree921.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/cluster/ejb3/clusteredsession/ejbthree921/*.class"/>
+         </fileset>
+         <fileset dir="${build.resources}/cluster/ejb3/clusteredsession/ejbthree921"/>
+      </jar>
+      
+   </target>  
+	
+</project>

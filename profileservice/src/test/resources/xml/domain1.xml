@@ -1,0 +1,60 @@
+<!-- $Id:$ -->
+<domain
+    xmlns="urn:jboss:profileservice:domain:1.0"
+    name="domain1">
+    <profiles
+        xmlns="urn:jboss:profileservice:profiles:1.0"
+        name="profiles">
+        
+        <profile name="immutable">
+            <profile-source>
+                <source>${jboss.server.home.url}deployers</source>
+                <source>${jboss.server.home.url}conf</source> 
+            </profile-source>
+            <deployment>myEjb3Deployment.ear</deployment>
+            <requirements>
+                <requirement name="ejb3" filter="ejb3" comment="Need an ejb3 provider" />
+            </requirements>
+        </profile>
+
+        <profile name="ejb3-profile">
+            <profile-source>
+                <source>${jboss.server.home.url}deployers/</source>
+                <source>${jboss.server.home.url}deploy</source>
+            </profile-source>
+            <deployment>ejb3.deployer</deployment>
+            <deployment>ejb3-connectors-jboss-beans.xml</deployment>
+            <deployment>ejb3-container-jboss-beans.xml</deployment>
+            <deployment>ejb3-interceptors-aop.xml</deployment>
+            <deployment>ejb3-timerservice-jboss-beans.xml</deployment>
+            <deployment>ejb3-connectors-jboss-beans.xml</deployment>
+            <capabilities>
+                <capability name="ejb3">
+                    <property>
+                        <key>key1</key>
+                        <value>value1</value>
+                    </property>
+                    <property>
+                        <key>key2</key>
+                        <value>value2</value>
+                    </property>
+                </capability>
+            </capabilities>
+        </profile>
+
+        <hotdeployment-profile name="mutable">
+            <profile-source>
+                <source>${jboss.server.home.url}deploy</source>
+                <source>${jboss.server.home.url}deploy2</source>
+            </profile-source>
+            <sub-profile>immutable</sub-profile>
+        </hotdeployment-profile>
+        
+    </profiles>
+    
+    <resources>
+        <connector-resource jndiName="java:/DefaultDS" poolName="DefaultDSPool">
+            <connection-url>jdbc:hsqldb:hsql://${jboss.bind.address}:1701</connection-url>
+        </connector-resource>
+    </resources>
+</domain>

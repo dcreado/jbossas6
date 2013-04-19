@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  MC Bean Descriptor to install a state-reporting
+  bean whose state will change alongside its lifecycle
+
+-->
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="org.jboss.jbossas.embedded.test.StateReporter" class="org.jboss.jbossas.embedded.testsuite.mc.StateReportingBean" />
+
+</deployment>

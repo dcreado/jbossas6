@@ -1,0 +1,492 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-tomcat</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Tomcat</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (tomcat module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+          <exclude>**/*.ser</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptorSourceDirectory>src/assembly</descriptorSourceDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <property name="output.resources" location="target/resources"/>
+                <mkdir dir="${output.resources}"/>
+                <copy todir="${output.resources}" filtering="yes">
+                  <fileset dir="src/resources">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <property name="output.deploy" location="target/deploy"/>
+                <mkdir dir="${output.deploy}"/>
+                <copy todir="${output.deploy}">
+                  <fileset dir="src/webapps">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <property name="output.lib" location="target"/>
+                <!--<mkdir dir="${output.lib}"/>
+                <copy file="${output.lib}/${project.build.finalName}-jbossweb-cluster-aop.jar"
+                      tofile="${output.lib}/jbossweb-cluster.aop"/>-->
+                
+                <mkdir dir="${output.deploy}/jboss-web.deployer/META-INF"/>
+                <copy todir="${output.deploy}/jboss-web.deployer/META-INF">
+                   <fileset dir="${output.resources}">
+                      <include name="jboss-structure.xml" />
+                      <include name="war-deployers-jboss-beans.xml" />
+                      <include name="webserver-xmbean.xml" />
+                   </fileset>
+                </copy>	
+                
+                <copy file="target/${project.build.finalName}-jboss-web-deployer.jar"
+                      tofile="${output.deploy}/jboss-web.deployer/jboss-web-deployer.jar"/>
+                
+                <mkdir dir="${output.deploy}/jbossweb.sar/META-INF"/>
+                <copy tofile="${output.deploy}/jbossweb.sar/META-INF/jboss-beans.xml"
+                      file="${output.resources}/jboss-beans.xml"/>
+                <copy tofile="${output.deploy}/jbossweb.sar/META-INF/jboss-structure.xml"
+                      file="${output.resources}/jboss-structure-sar.xml"/>
+                <copy tofile="${output.deploy}/jbossweb.sar/META-INF/jboss-scanning.xml"
+                      file="${output.resources}/jboss-scanning.xml"/>
+                    
+                <copy file="${output.resources}/context.xml"
+                  todir="${output.deploy}/jbossweb.sar"/>
+                <copy file="${output.resources}/catalina.properties"
+                  todir="${output.deploy}/jbossweb.sar"/>
+                <copy file="${output.resources}/web.xml"
+                  tofile="${output.deploy}/jbossweb.sar/web.xml"/>
+                <copy file="${output.resources}/server.xml"
+                  tofile="${output.deploy}/jbossweb.sar/server.xml"/>
+                <copy file="${maven.dependency.org.jboss.web.jasper-jdt.jar.path}"
+                  tofile="${output.deploy}/jbossweb.sar/jasper-jdt.jar"/>
+                <copy file="${maven.dependency.org.jboss.web.jbossweb.jar.path}"
+                  tofile="${output.deploy}/jbossweb.sar/jbossweb.jar"/>
+                <copy file="${maven.dependency.org.jboss.spec.javax.servlet.jstl.jboss-jstl-api_1.2_spec.jar.path}"
+                  tofile="${output.deploy}/jbossweb.sar/jstl.jar"/>                                                    
+            
+                <copy file="target/${project.build.finalName}-jboss-web-service.jar"
+                      tofile="${output.deploy}/jbossweb.sar/jboss-web-service.jar"/>
+
+                <!-- mod_cluster service -->
+                <mkdir dir="${output.deploy}/mod_cluster.sar/META-INF"/>
+                <copy file="${maven.dependency.org.jboss.mod_cluster.mod_cluster.jar.path}"
+                      tofile="${output.deploy}/mod_cluster.sar/mod_cluster.jar"/>
+                <copy todir="${output.deploy}/mod_cluster.sar/META-INF">
+                   <fileset dir="${output.resources}/mod_cluster"/>
+                </copy>
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.jboss.jsf.integration</groupId>
+                  <artifactId>jboss-jsf-deployer</artifactId>
+                  <version>${version.jboss.jsf-deployer}</version>
+                  <type>jar</type>                                
+                  <outputDirectory>target/deploy/jsf.deployer</outputDirectory>    
+                  <excludes>META-INF/maven/**</excludes>          
+                </artifactItem>
+              </artifactItems>          
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet.jstl</groupId>
+      <artifactId>jboss-jstl-api_1.2_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jacorb</groupId>
+      <artifactId>jacorb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jboss-security-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jboss</groupId>
+      <artifactId>jboss-serialization</artifactId>
+      <exclusions>
+        <exclusion>
+           <groupId>jboss</groupId>
+           <artifactId>jboss-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-logging-log4j</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-deployment-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.web</groupId>
+      <artifactId>jbossweb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.web</groupId>
+      <artifactId>jasper-jdt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-common</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-war</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss.web</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-vfs</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+         <exclusion>
+           <groupId>org.jboss.logging</groupId>
+           <artifactId>jboss-logging-spi</artifactId>
+         </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.ws</groupId>
+      <artifactId>jbossws-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.aop</groupId>
+      <artifactId>jboss-aop</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.security.auth.message</groupId>
+      <artifactId>jboss-jaspi-api_1.0_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-connector</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-ejb3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.ejb3</groupId>
+      <artifactId>jboss-ejb3-core</artifactId>
+      <classifier>client</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>apache-xerces</groupId>
+          <artifactId>xml-apis</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.microcontainer</groupId>
+          <artifactId>jboss-dependency</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jaspi-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jca-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jacc-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jms-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-ejb-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-spi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.logging</groupId>
+          <artifactId>jboss-logging-log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.metadata</groupId>
+          <artifactId>jboss-metadata</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jsr181-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>quartz</groupId>
+          <artifactId>quartz</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>sun-jaxws</groupId>
+          <artifactId>jaxws-api</artifactId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jboss-security-spi</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+        <exclusion>
+        	<artifactId>jbosssx</artifactId>
+        	<groupId>org.jboss.security</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.0-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-server-cache-spi</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-iiop</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.security.jacc</groupId>
+      <artifactId>jboss-jacc-api_1.4_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.resource</groupId>
+      <artifactId>jboss-connector-api_1.5_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.ejb</groupId>
+      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet</groupId>
+      <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
+      <artifactId>jboss-jsp-api_2.2_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.el</groupId>
+      <artifactId>jboss-el-api_2.2_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.ws</groupId>
+      <artifactId>jboss-jaxws-api_2.2_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloader</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-core-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-structure-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-vfs</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-vfs-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>oswego-concurrent</groupId>
+      <artifactId>concurrent</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.mc-int</groupId>
+       <artifactId>jboss-mc-int-servlet</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.mod_cluster</groupId>
+       <artifactId>mod_cluster</artifactId>
+       <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+  
+</project>

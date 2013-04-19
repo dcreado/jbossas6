@@ -1,0 +1,326 @@
+<?xml version="1.0"?>
+<mbeans-descriptors>
+
+  <mbean         name="JBossCacheManager"
+          description="JBoss Cache based implementation of the Manager interface"
+               domain="Catalina"
+                group="Manager"
+                 type="org.jboss.web.tomcat.service.session.JBossCacheManager">
+
+    <attribute   name="activeSessionCount"
+          description="Number of active sessions at this moment, including
+                       replicated sessions that have not been accessed on this node"
+                 type="int" 
+            writeable="false"/>
+
+    <attribute   name="activeSessions"
+          description="Number of active sessions at this moment, including
+                       replicated sessions that have not been accessed on this node.
+                       Same as activeSessionCount"
+                 type="int" 
+            writeable="false"/>
+
+    <attribute   name="algorithm"
+          description="The message digest algorithm to be used when generating
+                       session identifiers"
+                 type="java.lang.String"/>
+
+    <attribute   name="className"
+          description="Fully qualified class name of the managed object"
+                 type="java.lang.String"
+            writeable="false"/>
+
+    <attribute   name="createdSessionCount"
+          description="Number of sessions created on this node. Does not include
+                       sessions initially created on other nodes, even if those 
+                       sessions were accessed on this node"
+                 type="long" 
+            writeable="false"/>
+
+    <attribute   name="distributable"
+          description="The distributable flag for Sessions created by this
+                       Manager"
+                 type="boolean"/>
+
+    <attribute   name="expiredSessionCount"
+          description="Number of sessions that expired (doesn't include explicit invalidations)"
+                 type="int" 
+            writeable="false"/>
+
+    <attribute   name="expiredSessions"
+          description="Number of sessions that expired (doesn't include explicit invalidations).
+                       Same as expiredSessionCount"
+                 type="int" />
+
+    <attribute   name="localActiveSessionCount"
+          description="Number of active sessions at this moment.  This does not
+                       include replicated sessions that have not been accessed 
+                       on this node"
+                 type="long"  
+            writeable="false"/>
+
+    <attribute   name="maxActive"
+          description="Maximum number of active sessions so far, including
+                       replicated sessions that have not been accessed on this 
+                       node. Same as maxActiveSessionCount"
+                 type="int" />
+
+    <attribute   name="maxActiveAllowed"
+          description="The maximum number of active Sessions allowed, or -1
+                       for no limit"
+                 type="int"/>
+
+    <attribute   name="maxActiveSessionCount"
+          description="Maximum number of active sessions so far, including
+                       replicated sessions that have not been accessed on this node"
+                 type="int"  
+            writeable="false"/>
+
+    <attribute   name="maxActiveSessions"
+          description="The maximum number of active Sessions allowed, or -1
+                       for no limit. Same as maxActiveAllowed"
+                 type="int"/>
+
+    <attribute   name="maxInactiveInterval"
+          description="The default maximum inactive interval for Sessions
+                       created by this Manager"
+                 type="int"/>
+
+    <attribute   name="maxLocalActiveSessionCount"
+          description="Maximum number of active sessions so far, excluding
+                       replicated sessions that have not been accessed on this node"
+                 type="int"  
+            writeable="false"/>
+
+    <attribute   name="name"
+          description="The descriptive name of this Manager implementation
+                       (for logging)"
+                 type="java.lang.String"
+            writeable="false"/>
+
+    <attribute name="processExpiresFrequency"
+               description="The frequency of the manager checks (expiration and passivation)"
+               type="int"/>
+
+    <attribute   name="processingTime"
+          description="Time spent doing housekeeping and expiration"
+                 type="long" />
+
+    <attribute   name="rejectedSessionCount"
+          description="Number of sessions we rejected due to maxActive being reached"
+                 type="int"
+            writeable="false"/>
+
+    <attribute   name="rejectedSessions"
+          description="Number of sessions we rejected due to maxActive being 
+                       reached. Same as rejectedSessionCount"
+                 type="int" />
+
+    <attribute   name="replicationStatistics"
+          description="The replication statistics for the sessions managed by this manager"
+                 type="org.jboss.web.tomcat.statistics.ReplicationStatistics"
+            writeable="false"/>
+
+    <attribute   name="sessionAverageAliveTime"
+          description="Average time an expired session had been alive"
+                 type="int" />
+
+    <attribute   name="sessionCounter"
+          description="Total number of sessions created by this manager. 
+                       Same as createdSessionCount"
+                 type="int" />
+
+    <attribute   name="sessionIdLength"
+          description="Number of characters used in creating a session id, 
+                       excluding any jvmRoute"
+                 type="int"
+            writeable="false"/>
+
+    <attribute   name="sessionMaxAliveTime"
+          description="Longest time an expired session had been alive"
+                 type="int" />
+
+    <attribute   name="timeSinceLastReset"
+          description="Elapsed time (in seconds) since this manager was instantiated 
+                       or the last call to resetStats()"
+                 type="long" 
+            writeable="false"/>
+
+
+    <attribute   name="randomFile"
+          description="File source of random - /dev/urandom or a pipe"
+                 type="java.lang.String"/>
+
+    <attribute   name="entropy"
+          description="A String initialization parameter used to increase the
+                       entropy of the initialization of our random number
+                       generator"
+                 type="java.lang.String"/>
+
+    <attribute   name="pathname"
+          description="Unused; exists solely for compatibility with the Tomcat manager mbean interface"
+                 type="java.lang.String"/>
+
+    <attribute   name="cacheConfigName"
+          description="Cache config name used to get the underlying cache from a cache manager"
+                 type="java.lang.String"
+            writeable="false"/>
+
+    <attribute   name="duplicates"
+          description="Number of duplicated session ids generated"
+                 type="int" />
+
+    <attribute   name="maxPassivatedSessionCount"
+          description="Maximum number of passivated sessions so far"
+                 type="long"  
+            writeable="false"/>
+
+    <attribute   name="maxUnreplicatedInterval"
+          description="Maximum interval between requests, in seconds, after which a
+                       request will trigger replication of the session's metadata 
+                       regardless of whether the request has otherwise made the session dirty"
+                 type="long"/>
+
+    <attribute   name="passivatedSessionCount"
+          description="Number of passivated sessions at this moment"
+                 type="long" 
+            writeable="false"/>
+
+    <attribute   name="passivationMaxIdleTime"
+          description="Elapsed time after which an inactive session will be passivated 
+                       to persistent storage if passivation is enabled"
+                 type="long" 
+            writeable="false"/>
+
+    <attribute   name="passivationMinIdleTime"
+          description="Elapsed time after which an inactive session will be passivated 
+                       to persistent storage if passivation is enabled and the 
+                       manager needs to passivate sessions early in order to
+                       comply with a maxActiveAllowed setting"
+                 type="long" 
+            writeable="false"/>
+
+    <attribute   name="replicationGranularity"
+          description="The granularity of what is replicated if session data is
+                       considered to be dirty"
+                 type="org.jboss.metadata.web.jboss.ReplicationGranularity" 
+            writeable="false"/>
+
+    <attribute   name="replicationTrigger"
+          description="The granularity of what is replicated if session data is
+                       considered to be dirty"
+                 type="org.jboss.metadata.web.jboss.ReplicationTrigger" 
+            writeable="false"/>
+
+    <attribute   name="snapshotInterval"
+          description="Number of milliseconds between replications if 'interval'
+                       snapshot mode is used"
+                 type="int" 
+            writeable="false"/>
+
+    <attribute   name="snapshotMode"
+          description="Whether replication should occur on request exit by the
+                       request thread ('instant' mode) or whether replication
+                       should be managed by a separate task that executes on
+                       a fixed interval ('interval' mode)"
+                 type="org.jboss.metadata.web.jboss.SnapshotMode" 
+            writeable="false"/>
+
+    <attribute   name="useJK"
+          description="Whether JK is being used and special handling of a jvmRoute
+                       portion of session ids is needed"
+                 type="java.lang.Boolean"
+            writeable="false"/>
+
+    <attribute   name="passivationEnabled"
+          description="Whether passivation was enabled in jboss-web.xml and in the
+                       underlying cache"
+                 type="boolean"
+            writeable="false"/>
+
+    <operation   name="reportReplicationStatistics"
+          description="Outputs the replication statistics as an HTML table, with one row
+                       per session"
+               impact="ACTION"
+           returnType="java.lang.String">
+    </operation>
+
+    <operation   name="reportReplicationStatisticsCSV"
+          description="Outputs the replication statistics as a set of comma-separated-values, 
+                       with one row per session, and the first row as a header listing field names"
+               impact="ACTION"
+           returnType="java.lang.String">
+    </operation>
+
+    <operation   name="reportReplicationStatisticsCSV"
+          description="Outputs the replication statistics for the given session 
+                       as a set of comma-separated-values, with a header row listing field names"
+               impact="ACTION"
+           returnType="java.lang.String">
+      <parameter name="sessionId"
+          description="Id of the session"
+                 type="java.lang.String"/>
+    </operation>
+
+    <operation   name="resetStats"
+          description="Resets all statistics"
+               impact="ACTION"
+           returnType="void">
+    </operation>
+
+    <operation   name="expireSession"
+          description="Expire a session"
+               impact="ACTION"
+           returnType="void">
+      <parameter name="sessionId"
+          description="Id of the session"
+                 type="java.lang.String"/>
+    </operation>
+
+    <operation   name="getCreationTime"
+          description="Get the creation time"
+               impact="ACTION"
+           returnType="java.lang.String">
+      <parameter name="sessionId"
+          description="Id of the session"
+                 type="java.lang.String"/>
+    </operation>
+
+    <operation   name="getLastAccessedTime"
+          description="Get the last access time"
+               impact="ACTION"
+           returnType="java.lang.String">
+      <parameter name="sessionId"
+          description="Id of the session"
+                 type="java.lang.String"/>
+    </operation>
+
+    <operation   name="getSessionAttribute"
+          description="Return a session attribute"
+               impact="ACTION"
+           returnType="java.lang.String">
+      <parameter name="sessionId"
+          description="Id of the session"
+                 type="java.lang.String"/>
+      <parameter name="key"
+          description="key of the attribute"
+                 type="java.lang.String"/>
+    </operation>
+
+    <operation   name="listLocalSessionIds"
+          description="Return the list of active session ids, excluding
+                       replicated sessions that have not been accessed on this node"
+               impact="ACTION"
+           returnType="java.lang.String">
+    </operation>
+
+    <operation   name="listSessionIds"
+          description="Return the list of active session ids, including
+                       replicated sessions that have not been accessed on this node"
+               impact="ACTION"
+           returnType="java.lang.String">
+    </operation>
+
+  </mbean>
+
+</mbeans-descriptors>

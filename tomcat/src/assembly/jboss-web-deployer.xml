@@ -1,0 +1,23 @@
+<assembly>
+  <id>jboss-web-deployer</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>org/jboss/web/tomcat/service/deployers/ClusteringDefaultsDeployer.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/ClusteringDependencyDeployer.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/DeployerConfig.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/DummyPersistenceUnitDependencyResolver.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/TomcatDeployer.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/TomcatDeployer$ENCLoader.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/TomcatDeployerMBean.class</include>
+        <include>org/jboss/web/tomcat/service/deployers/WarClassLoaderDeployer.class</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>

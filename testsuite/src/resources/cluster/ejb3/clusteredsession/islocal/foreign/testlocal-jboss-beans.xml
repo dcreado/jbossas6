@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="Ejb3IsLocalTestCacheContainerRegistryConfigurationEntry"
+        class="org.jboss.ha.ispn.config.CacheContainerRegistryConfigurationEntry">
+    
+    <!-- When we're installed, register ourself -->
+    <install bean="CacheContainerRegistry" method="add">
+      <parameter><this/></parameter>
+    </install>
+    
+    <!-- When we're uninstalled, unregister ourself -->
+    <uninstall bean="CacheContainerRegistry" method="remove">
+      <parameter><this/></parameter>
+    </uninstall>
+    
+    <property name="id">ejb3-is-local-test-partition</property>
+    <property name="configuration">
+      <bean class="org.jboss.ha.ispn.CacheContainerConfiguration">
+        <constructor>
+          <parameter>
+            <bean class="org.infinispan.config.GlobalConfiguration">
+              <property name="transportClass">org.infinispan.remoting.transport.jgroups.JGroupsTransport</property>
+              <property name="clusterName">Ejb3IsLocalTestPartition-HAPartition</property>
+              <property name="transportProperties">
+                <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
+                  <entry>
+                    <key>stack</key>
+                    <value>${jboss.multiplexer.stack:udp}</value>
+                  </entry>
+                </map>
+              </property>
+            </bean>
+          </parameter>
+          <parameter>
+            <bean class="org.infinispan.config.Configuration">
+              <property name="invocationBatchingEnabled">true</property>
+              <property name="fetchInMemoryState">true</property>
+              <property name="cacheMode">REPL_SYNC</property>
+            </bean>
+          </parameter>
+        </constructor>
+      </bean>
+    </property>
+  </bean>
+
+  <bean name="Ejb3IsLocalTestPartitionCacheHandler" class="org.jboss.ha.framework.server.ispn.HAPartitionCacheHandler">
+    <constructor>
+      <parameter><inject bean="CacheContainerRegistry"/></parameter>
+    </constructor>
+    <property name="cacheContainerName">ejb3-is-local-test-partition</property>
+    <depends>Ejb3IsLocalTestCacheContainerRegistryConfigurationEntry</depends>
+  </bean>
+  
+  <bean name="Ejb3IsLocalTestDistributedState" class="org.jboss.ha.framework.server.ispn.DistributedState">
+    <!--annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=DistributedState,partitionName=${jboss.partition.name:DefaultPartition}", exposedInterface=org.jboss.ha.framework.server.DistributedStateImplMBean.class, registerDirectly=true)</annotation-->
+    <constructor>
+      <parameter><inject bean="Ejb3IsLocalTestPartitionCacheHandler"/></parameter>
+    </constructor>
+    <property name="cacheName">distributed-state</property>
+  </bean>
+  
+  <bean name="Ejb3IsLocalTestPartition" class="org.jboss.ha.framework.server.ClusterPartition">     
+       
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=Ejb3IsLocalTestPartition", exposedInterface=org.jboss.ha.framework.server.ClusterPartitionMBean.class)</annotation>   
+    
+    <property name="channelSource"><inject bean="Ejb3IsLocalTestDistributedState"/></property>
+      
+    <!-- Name of the partition being built -->
+    <property name="partitionName">Ejb3IsLocalTestPartition</property>
+       
+    <!-- Max time (in ms) to wait for state transfer to complete. Increase for large states -->
+    <property name="stateTransferTimeout">30000</property>
+            
+    <!-- Max time (in ms) to wait for RPC calls to complete. -->
+    <property name="methodCallTimeout">60000</property>
+    
+    <!-- Optionally provide a thread source to allow async connect of our channel -->
+    <property name="threadPool"><inject bean="LongRunningTasksThreadPool"/></property>
+    
+    <property name="distributedStateImpl"><inject bean="Ejb3IsLocalTestDistributedState"/></property>
+
+    <!-- For legacy managed object interface support -->
+    <property name="cacheHandler"><inject bean="Ejb3IsLocalTestPartitionCacheHandler"/></property>
+    
+    <depends>jboss:service=Naming</depends>
+      
+  </bean>
+  
+</deployment>

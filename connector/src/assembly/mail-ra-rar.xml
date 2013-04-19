@@ -1,0 +1,20 @@
+<assembly>
+  <id>mail-ra-rar</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/mail-rar</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>target/jboss-as-connector-mail-ra.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>mail-ra.jar</destName>
+    </file>
+  </files>
+</assembly>

@@ -1,0 +1,33 @@
+<assembly>
+  <id></id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>${basedir}/../build/target/jboss-${project.version}</directory>
+      <outputDirectory>jboss-${project.version}</outputDirectory>
+      <excludes>
+        <exclude>**/data/**</exclude>
+        <exclude>**/log/**</exclude>
+        <exclude>**/tmp/**</exclude>
+        <exclude>**/work/**</exclude>
+        <exclude>bin/*</exclude>
+        <exclude>boot.log</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${basedir}/../build/target/jboss-${project.version}</directory>
+      <outputDirectory>jboss-${project.version}</outputDirectory>
+      <includes>
+        <include>bin/*</include>
+      </includes>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <directory>docs</directory>
+      <outputDirectory>jboss-${project.version}</outputDirectory>
+    </fileSet>
+  </fileSets>
+</assembly>

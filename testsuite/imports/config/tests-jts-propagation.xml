@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+
+<!--
+   | Targets that run JBossTS JTS propagation tests 
+-->
+ 
+<!-- $Id$ -->
+<project name="main.server.config.jbossts.jtspropagation" xmlns:server="http://jboss.org/ns/test/ant/server">
+
+
+   <property name="jbossts.jts.propagation.test.dir" value="jbossts" />
+   <property name="jbossts.jts.propagation.test.script.dir" value="${jbossts.jts.propagation.test.dir}/scripts" />
+   <property name="jbossts.jts.propagation.test.resource.dir" value="${jbossts.jts.propagation.test.dir}/resources" />
+	
+  <!--
+    | Targets
+  -->
+
+   <!-- 
+    | JBQA-2604 - JBossTS JTS propagation tests.
+    |
+    | Usage for all tests:
+    |    ./build.sh tests-jts-propagation
+    |     
+    |  or for particular test scenario:
+    |    ./build.sh -Djbossts.ejbX={ejb2|ejb3} -Djbossts.transport={jrmp|iiop} -Djbossts.target=jts-propagation-tests-single tests-jts-propagation
+    |
+    | Note: If you want to force the wiping out any txs in doubt from DB before the test you can use the property -DwipeOutTxsInDoubtBeforeTest=true. 
+    | Note 2: The default database is PostgreSQL 8.3. To change this you need to set the property jbossts.db like for the crash recovery tests. 
+    -->
+   <target name="tests-jts-propagation" depends="init-dependencies"
+           description="Runs JBossTS JTS propagation tests">
+
+      <available file="${jboss.dist}/server/jts-propagation-node0" property="have.jts.propag.node0.profile" value="true"/>
+      <available file="${jboss.dist}/server/jts-propagation-node1" property="have.jts.propag.node1.profile" value="true"/>
+      <condition property="have.jts.propag.profiles">
+      	<and>
+      	  <istrue value="${have.jts.propag.node0.profile}"/>
+          <istrue value="${have.jts.propag.node1.profile}"/>
+      	</and>
+      </condition>
+   	
+      <antcall target="prepare-jts-propogation-profiles" />
+   	
+      <property name="jbossts.target" value="jts-propagation-tests" />
+      <property name="jbossts.max.time" value="300000" />
+   	  <property name="jbossts.db" value="psql_8.3" />
+   	
+      <run-jts-propag-test target="${jbossts.target}" />
+
+   </target>
+
+
+  <!--
+    | Macros and others
+  -->
+
+   <macrodef name="run-jts-propag-test">
+      <attribute name="target"/>
+      <sequential>
+         <echo message="starting of ${build.resources}/${jbossts.jts.propagation.test.script.dir}/as-tests.xml"/>
+         <java classname="org.apache.tools.ant.launch.Launcher" fork="true" failonerror="true">
+            <classpath>
+               <pathelement location="${build.lib}/jts-propagation-client.jar"/>
+               <pathelement location="${ant.library.dir}/ant-launcher.jar"/>
+               <pathelement location="${jbosstest.dist}/common/lib/jboss-iiop.jar"/>
+               <fileset dir="${jbosstest.dist}/client"/>
+               <fileset refid="org.apache.ant:ant:jar"/>
+               <fileset refid="org.apache.ant:ant-junit:jar"/>
+               <fileset refid="junit:junit:jar"/>
+               <fileset refid="org.jboss.jbossas:jboss-server-manager:jar"/>
+               <fileset refid="org.jboss.jbossts:jbossjts:jar"/>
+               <fileset refid="org.jboss.jbossts:jbossjts-integration:jar"/>
+         	</classpath>
+            <sysproperty key="ant.home" value="${ant.home}"/>
+            <sysproperty key="ant.library.dir" value="${ant.library.dir}"/>
+            <sysproperty key="java.security.policy" value="${build.resources}/${jbossts.jts.propagation.test.resource.dir}/java.policy"/>
+            <sysproperty key="product.dir" value="${build.resources}/${jbossts.jts.propagation.test.dir}" />
+            <sysproperty key="jboss.home" value="${jbosstest.dist}" />
+            <sysproperty key="jboss.dist" value="${jboss.dist}" />
+            <sysproperty key="astest.jar.dir" value="${build.lib}" />
+            <sysproperty key="astest.jar.name" value="jts-propagation-ejb3.jar" />
+            <sysproperty key="astest.ejb2.jar.name" value="jts-propagation-ejb2.jar" />
+            <sysproperty key="astest.jar.deploy.dir" value="../../lib" />
+            <sysproperty key="build.reports" value="${build.reports}" />
+            <sysproperty key="jbossas.startup.timeout" value="480" />
+            <sysproperty key="jbossas.shutdown.timeout" value="240" />
+            <sysproperty key="wipeOutTxsInDoubtBeforeTest" value="${wipeOutTxsInDoubtBeforeTest}" />
+            <sysproperty key="jbossts.ejbX" value="${jbossts.ejbX}" />
+            <sysproperty key="jbossts.transport" value="${jbossts.transport}" />
+            <sysproperty key="jbossts.db" value="${jbossts.db}" />
+            <sysproperty key="node0" value="${node0}" />
+            <sysproperty key="node1" value="${node0}" />    <!-- uses the Service Binding Manager -->
+            <sysproperty key="testTime" value="${jbossts.max.time}" />
+         	<sysproperty key="jbosstest.udp.ip_ttl" value="${jbosstest.udp.ip_ttl}" />
+            <env key="JBOSS_HOME" value="${jbosstest.dist}" />
+            <arg value="-f"/>
+            <arg value="${build.resources}/${jbossts.jts.propagation.test.script.dir}/as-tests.xml"/>
+            <arg value="@{target}"/>
+         	<!--jvmarg value="-Xdebug"/>
+         	<jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"/-->
+         </java>
+      </sequential>
+   </macrodef>
+   
+   
+   <target name="prepare-jts-propogation-profiles" unless="have.jts.propag.profiles">
+      <delete dir="${jboss.dist}/server/jts-propagation-node0" />
+      <create-config baseconf="all" newconf="jts-propagation-node0">
+         <patternset>
+            <include name="conf/**"/>
+            <include name="deploy/**"/>
+            <include name="deployers/**"/>
+            <include name="lib/**"/>
+         </patternset>
+      </create-config>
+
+      <delete dir="${jboss.dist}/server/jts-propagation-node1" />
+      <create-config baseconf="all" newconf="jts-propagation-node1">
+         <patternset>
+            <include name="conf/**"/>
+            <include name="deploy/**"/>
+            <include name="deployers/**"/>
+            <include name="lib/**"/>
+         </patternset>
+      </create-config>
+
+      <!-- install JTS transactions into these profiles -->
+      <ant dir="${jboss.dist}/docs/examples/transactions" target="jts">
+         <property name="target.server.dir" location="${jboss.dist}/server/jts-propagation-node0"/>
+      </ant>
+      <ant dir="${jboss.dist}/docs/examples/transactions" target="jts">
+         <property name="target.server.dir" location="${jboss.dist}/server/jts-propagation-node1"/>
+      </ant>
+
+      <setup-jts-propogation-crash-recovery conf="jts-propagation-node0" nodeIdentifier="1"/>
+      <setup-jts-propogation-crash-recovery conf="jts-propagation-node1" nodeIdentifier="2"/>
+   </target>
+  
+	
+   <macrodef name="setup-jts-propogation-crash-recovery">
+      <attribute name="conf"/>
+      <attribute name="nodeIdentifier"/>
+      <sequential>
+      	<!-- put recovery datasource to the JTAEnvironmentBean section -->
+        <replaceregexp file="${jboss.dist}/server/@{conf}/deploy/transaction-jboss-beans.xml" flags="s"
+           match="(&lt;bean name=&quot;JTAEnvironmentBean&quot;)(.*?)(&lt;/bean&gt;)"
+           replace="\1\2@@@PUT_RECOVERY_PROPERTY_HERE@@@\3@@@PUT_JTS_ENVIRONMENT_BEAN_HERE@@@" />
+        <replace file="${jboss.dist}/server/@{conf}/deploy/transaction-jboss-beans.xml">
+           <replacetoken><![CDATA[@@@PUT_RECOVERY_PROPERTY_HERE@@@]]></replacetoken>
+           <replacevalue><![CDATA[
+        <property name="xaResourceRecoveryInstances">
+            <list elementClass="java.lang.String">
+                <value>com.arjuna.ats.internal.jbossatx.jta.AppServerJDBCXARecovery;jndiname=CrashRecoveryDS</value>
+            </list>
+        </property>
+]]></replacevalue>
+        </replace>
+        <!-- set alwaysPropagateContext=true -->
+        <replace file="${jboss.dist}/server/@{conf}/deploy/transaction-jboss-beans.xml">
+           <replacetoken><![CDATA[@@@PUT_JTS_ENVIRONMENT_BEAN_HERE@@@]]></replacetoken>
+           <replacevalue><![CDATA[
+        <bean name="JTSEnvironmentBean" class="com.arjuna.ats.jts.common.JTSEnvironmentBean">
+            <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.jta:name=JTSEnvironmentBean", exposedInterface=com.arjuna.ats.jts.common.JTSEnvironmentBeanMBean.class, registerDirectly=true)</annotation>
+            <constructor factoryClass="com.arjuna.ats.jts.common.jtsPropertyManager" factoryMethod="getJTSEnvironmentBean"/>
+            <property name="alwaysPropagateContext">true</property>
+        </bean>
+]]></replacevalue>
+        </replace>
+      	<!-- set xaRecoveryNode -->
+      	<replaceregexp file="${jboss.dist}/server/@{conf}/deploy/transaction-jboss-beans.xml" flags="s"
+      	   match="(xaRecoveryNodes.*?&lt;value&gt;)\d(&lt;/value&gt;)"
+      	   replace="\1@{nodeIdentifier}\2" />
+        <!-- set nodeIdentifier -->
+      	<replaceregexp file="${jboss.dist}/server/@{conf}/deploy/transaction-jboss-beans.xml" flags="s"
+      		match="(&lt;property name=&quot;nodeIdentifier&quot;&gt;)1(&lt;/property&gt;)"
+            replace="\1@{nodeIdentifier}\2" />
+
+        
+        <!-- more verbose logging 
+        FIXME modify it for new jbossts version, i.e. for deploy/transaction-jboss-beans.xml file
+        <replace file="${jboss.dist}/server/@{conf}/conf/jbossts-properties.xml">
+           <replacetoken><![CDATA[type="System" value="0x00000000"]]></replacetoken>
+           <replacevalue><![CDATA[type="System" value="0xffffffff"]]></replacevalue>
+        </replace-->
+      </sequential>
+   </macrodef>
+
+</project>

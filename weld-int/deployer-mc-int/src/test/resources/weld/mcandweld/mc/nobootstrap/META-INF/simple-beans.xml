@@ -1,0 +1,3 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+  <bean name="SimpleBean" class="org.jboss.test.deployers.support.nobootstrap.mc.SimpleBeanWithSimpleWebBean"/>
+</deployment>

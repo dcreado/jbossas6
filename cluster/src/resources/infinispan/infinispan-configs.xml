@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Refer to Infinispan configuration documentation http://docs.jboss.org/infinispan/4.2/apidocs/config.html for a description of the possible settings.
+-->
+<infinispan-configs default="ha-partition" xmlns="urn:jboss:infinispan-configs:1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <!-- web tier Clustered Single Sign-On, HA-JNDI, Distributed State -->
+  <infinispan-config name="ha-partition">
+    <alias>clustered-sso</alias>
+    <infinispan xmlns="urn:infinispan:config:4.2">
+      <global>
+        <transport clusterName="${jboss.partition.name:DefaultPartition}-HAPartition" distributedSyncTimeout="17500">
+          <properties>
+            <property name="stack" value="${jboss.default.jgroups.stack:udp}"/>
+          </properties>
+        </transport>
+        <globalJmxStatistics enabled="true"/>
+        <shutdown hookBehavior="DONT_REGISTER"/>
+      </global>
+      <default>
+        <locking isolationLevel="REPEATABLE_READ" lockAcquisitionTimeout="15000" useLockStriping="false" concurrencyLevel="1000"/>
+        <jmxStatistics enabled="true"/>
+        <lazyDeserialization enabled="false"/>
+        <invocationBatching enabled="true"/>
+        <clustering mode="replication">
+          <!-- ISPN-835 workaround, use cluster cache loader in place of state transfer -->
+          <stateRetrieval timeout="60000" fetchInMemoryState="true"/>
+          <sync replTimeout="17500"/>
+        </clustering>
+      </default>
+    </infinispan>
+  </infinispan-config>
+
+  <!-- web session replication cache definitions -->
+  <infinispan-config name="web">
+    <alias>standard-session-cache</alias>
+    <infinispan xmlns="urn:infinispan:config:4.2">
+      <global>
+        <transport clusterName="${jboss.partition.name:DefaultPartition}-Web" distributedSyncTimeout="17500">
+          <properties>
+            <property name="stack" value="${jboss.default.jgroups.stack:udp}"/>
+          </properties>
+        </transport>
+        <globalJmxStatistics enabled="true"/>
+        <shutdown hookBehavior="DONT_REGISTER"/>
+      </global>
+      <default>
+        <locking isolationLevel="REPEATABLE_READ" lockAcquisitionTimeout="15000" useLockStriping="false" concurrencyLevel="1000"/>
+        <jmxStatistics enabled="true"/>
+        <lazyDeserialization enabled="true"/>
+        <invocationBatching enabled="true"/>
+        <clustering mode="replication">
+          <!-- ISPN-835 workaround, use cluster cache loader in place of state transfer -->
+          <!--stateRetrieval timeout="60000" fetchInMemoryState="true"/-->
+          <async useReplQueue="false"/>
+        </clustering>
+        <loaders passivation="true">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="true" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}web"/>
+            </properties>
+          </loader>
+          <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader"/>
+        </loaders>
+      </default>
+      <namedCache name="sync">
+        <clustering mode="replication">
+          <stateRetrieval timeout="60000" fetchInMemoryState="true"/>
+          <sync/>
+        </clustering>
+        <loaders passivation="true">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="true" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}web"/>
+            </properties>
+          </loader>
+        </loaders>
+      </namedCache>
+      <namedCache name="dist">
+        <clustering mode="distribution">
+          <!-- ISPN-835 workaround, use cluster cache loader in place of state transfer -->
+          <!--stateRetrieval timeout="60000" fetchInMemoryState="false"/-->
+          <hash numOwners="2"/>
+          <async useReplQueue="false"/>
+        </clustering>
+        <loaders passivation="true">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="false" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}web"/>
+            </properties>
+          </loader>
+          <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader">
+            <properties>
+              <property name="remoteCallTimeout" value="60000"/>
+            </properties>
+          </loader>
+        </loaders>
+      </namedCache>
+    </infinispan>
+  </infinispan-config>
+
+  <!-- stateful session bean cache definitions -->
+  <infinispan-config name="sfsb">
+    <alias>sfsb-cache</alias>
+    <alias>jboss.cache:service=EJB3SFSBClusteredCache</alias>
+    <infinispan xmlns="urn:infinispan:config:4.2">
+      <global>
+        <transport clusterName="${jboss.partition.name:DefaultPartition}-SFSB" distributedSyncTimeout="17500">
+          <properties>
+            <property name="stack" value="${jboss.default.jgroups.stack:udp}"/>
+          </properties>
+        </transport>
+        <globalJmxStatistics enabled="true"/>
+        <shutdown hookBehavior="DONT_REGISTER"/>
+      </global>
+      <default>
+        <locking isolationLevel="REPEATABLE_READ" lockAcquisitionTimeout="15000" useLockStriping="false" concurrencyLevel="1000"/>
+        <jmxStatistics enabled="true"/>
+        <lazyDeserialization enabled="true"/>
+        <invocationBatching enabled="true"/>
+        <clustering mode="replication">
+          <!-- ISPN-835 workaround, use cluster cache loader in place of state transfer -->
+          <!--stateRetrieval timeout="60000" fetchInMemoryState="true"/-->
+          <async useReplQueue="false"/>
+        </clustering>
+        <loaders passivation="true" shared="false">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="true" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}sfsb"/>
+            </properties>
+          </loader>
+          <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader">
+            <properties>
+              <property name="remoteCallTimeout" value="60000"/>
+            </properties>
+          </loader>
+        </loaders>
+        <eviction wakeUpInterval="5000" strategy="LRU"/>
+      </default>
+      <namedCache name="sync">
+        <clustering mode="replication">
+          <stateRetrieval timeout="60000" fetchInMemoryState="true"/>
+          <sync/>
+        </clustering>
+        <loaders passivation="true" shared="false">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="true" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}sfsb"/>
+            </properties>
+          </loader>
+        </loaders>
+      </namedCache>
+      <namedCache name="dist">
+        <clustering mode="distribution">
+          <!-- ISPN-835 workaround, use cluster cache loader in place of state transfer -->
+          <!--stateRetrieval timeout="60000" fetchInMemoryState="false"/-->
+          <hash numOwners="2"/>
+          <l1 enabled="true"/>
+          <async useReplQueue="false"/>
+        </clustering>
+        <loaders passivation="true">
+          <loader class="org.infinispan.loaders.file.FileCacheStore" fetchPersistentState="false" purgeOnStartup="true">
+            <properties>
+              <property name="location" value="${jboss.server.data.dir}${/}sfsb"/>
+            </properties>
+          </loader>
+          <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader">
+            <properties>
+              <property name="remoteCallTimeout" value="60000"/>
+            </properties>
+          </loader>
+        </loaders>
+      </namedCache>
+    </infinispan>
+  </infinispan-config>
+
+  <!-- Hibernate second-level cache -->
+  <infinispan-config name="hibernate" jndi-name="java:CacheManager/entity">
+    <infinispan xmlns="urn:infinispan:config:4.2">
+      <global>
+        <transport clusterName="${jboss.partition.name:DefaultPartition}-Hibernate" distributedSyncTimeout="17500">
+          <properties>
+            <property name="stack" value="${jboss.default.jgroups.stack:udp}"/>
+          </properties>
+        </transport>
+        <globalJmxStatistics enabled="true"/>
+        <shutdown hookBehavior="DONT_REGISTER"/>
+      </global>
+      <default>
+        <!-- Used to register JMX statistics in any available MBean server -->
+        <jmxStatistics enabled="false"/>
+        <!--transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.JBossTransactionManagerLookup"/-->
+      </default>
+      
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <namedCache name="entity">
+        <clustering mode="invalidation">
+          <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+          <sync replTimeout="20000"/>
+        </clustering>
+        <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false" />
+        <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
+             0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+        <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+        <expiration maxIdle="100000"/>
+        <lazyDeserialization enabled="true"/>
+      </namedCache>
+      
+      <!-- Default configuration is appropriate for entity/collection caching. -->
+      <namedCache name="entity-repeatable">
+        <clustering mode="invalidation">
+          <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+          <sync replTimeout="20000"/>
+        </clustering>
+        <!-- Note: REPEATABLE_READ is only useful if the application evicts/clears entities 
+          from the Hibernate Session and then expects to repeatably re-read them in 
+          the same transaction. Otherwise, the Session's internal cache provides a 
+          repeatable-read semantic. Before choosing this config, carefully read the docs
+          and make sure you really need REPEATABLE_READ.
+         -->
+        <locking isolationLevel="REPEATABLE_READ" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false"/>
+        <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
+             0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+        <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+        <expiration maxIdle="100000"/>
+        <lazyDeserialization enabled="true"/>
+      </namedCache>
+      
+      <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
+      <namedCache name="replicated-entity">
+        <clustering mode="replication">
+          <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+          <sync replTimeout="20000"/>
+        </clustering>
+        <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false"/>
+        <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
+             0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+        <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+        <expiration maxIdle="100000"/>
+        <lazyDeserialization enabled="true"/>
+      </namedCache>
+      
+      <!-- A config appropriate for query caching.  Does not replicate queries. -->
+      <namedCache name="local-query"><!-- Non-replicating query cache -->
+        <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false"/>
+        <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
+           the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+        <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+        <expiration maxIdle="100000"/>
+      </namedCache>
+      
+      <!-- A query cache that replicates queries.  Replication is asynchronous. -->
+      <namedCache name="replicated-query">
+        <clustering mode="replication">
+          <stateRetrieval fetchInMemoryState="false"/>
+          <async/>
+        </clustering>
+        <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false"/>
+        <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
+           the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
+        <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
+        <expiration maxIdle="100000"/>
+        <lazyDeserialization enabled="true"/>
+      </namedCache>
+      
+      <!-- Optimized for timestamp caching. -->
+      <!-- A clustered timestamp cache is required if query caching is used, even if the query cache itself is configured with CacheMode=LOCAL. -->
+      <namedCache name="timestamps">
+        <clustering mode="replication">
+          <stateRetrieval fetchInMemoryState="true" timeout="20000"/>
+          <async/>
+        </clustering>
+        <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
+                 lockAcquisitionTimeout="15000" useLockStriping="false"/>
+        <!--  Don't ever evict modification timestamps -->
+        <eviction wakeUpInterval="0" strategy="NONE"/>
+        <lazyDeserialization enabled="true"/>
+      </namedCache>
+    </infinispan>
+  </infinispan-config>
+
+</infinispan-configs>

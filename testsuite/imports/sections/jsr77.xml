@@ -1,0 +1,10 @@
+<project name="tests-jsr77-jars">
+   <!-- jsr77 test -->
+   <target name="_jars-jsr77" depends="init">
+      <mkdir dir="${build.lib}"/>
+      
+      <!-- Copy the ejb connector -->
+      <copy file="${org.jboss.jbossas:jboss-as-management:jar:ejb-management}"
+            tofile="${build.lib}/ejb-management.jar"/>
+   </target>
+</project>

@@ -1,0 +1,139 @@
+<project name="tests-weld-jars">
+
+   <target name="translator" depends="compile">
+      <mkdir dir="${build.lib}" />
+      
+      <jar destfile="${build.lib}/weld-translator.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/translator/ejb/**"/>
+         </fileset>
+	      <fileset dir="${source.resources}/deployers/weld/translator/ejb">
+            <include name="META-INF/beans.xml"/>
+         </fileset>
+      </jar>
+      
+      <war warfile="${build.lib}/weld-translator.war"
+         webxml="${source.resources}/deployers/weld/translator/war/WEB-INF/web.xml">
+         <webinf dir="${source.resources}/deployers/weld/translator/war/WEB-INF">
+            <include name="faces-config.xml"/>
+            <include name="beans.xml"/>
+            <include name="lib/**"/>
+         </webinf>
+         <fileset dir="${source.resources}/deployers/weld/translator/war/">
+            <include name="home.xhtml"/>
+            <include name="index.html"/>
+            <include name="template.xhtml"/>
+         </fileset>
+      </war>
+      
+      <ear destfile="${build.lib}/weld-translator.ear" appxml="${source.resources}/deployers/weld/translator/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="weld-translator.jar"/>
+            <include name="weld-translator.war"/>
+         </fileset>
+      </ear>
+   </target>
+
+   <!-- translator example with a plain, non-weld, ejb jar -->
+   <target name="plainEjbTranslator" depends="compile">
+      <mkdir dir="${build.lib}" />
+      
+      <jar destfile="${build.lib}/weld-translator-without-beans.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/translator/ejb/**"/>
+         </fileset>
+      </jar>
+      
+      <ear destfile="${build.lib}/weld-translatorplainejb.ear" appxml="${source.resources}/deployers/weld/plainEjbTranslator/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="weld-translator-without-beans.jar"/>
+            <include name="weld-translator.war"/>
+         </fileset>
+      </ear>
+   </target>
+
+   <target name="translatorLib" depends="compile">
+
+      <jar destfile="${build.lib}/weld-translator-lib.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/translator/ejb/SentenceParser.class"/>
+         </fileset>
+         <fileset dir="${source.resources}/deployers/weld/translator/ejb">
+            <include name="META-INF/beans.xml"/>
+         </fileset>
+      </jar>
+
+   </target>
+
+   <target name="translatorWithManifestClasspath" depends="translatorLib">
+      <mkdir dir="${build.lib}" />
+      
+      <jar destfile="${build.lib}/weld-translator-manifestclasspath.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/translator/ejb/**"/>
+            <exclude name="org/jboss/test/deployers/weld/translator/ejb/SentenceParser.class"/>
+         </fileset>
+         <fileset dir="${source.resources}/deployers/weld/translator/ejb">
+            <include name="META-INF/beans.xml"/>
+         </fileset>
+         <manifest>
+            <attribute name="Class-Path" value="../weld-translator-lib.jar"/>
+         </manifest>
+      </jar>
+
+      <ear destfile="${build.lib}/weld-translatormanifestcp.ear" appxml="${source.resources}/deployers/weld/translatorWithManifestClasspath/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="weld-translator-manifestclasspath.jar"/>
+            <include name="weld-translator-lib.jar"/>
+            <include name="weld-translator.war"/>
+         </fileset>
+      </ear>
+   </target>
+   
+   <target name="translatorWith3rdPartyLib" depends="translatorLib">
+      <mkdir dir="${build.lib}" />
+
+      <jar destfile="${build.lib}/weld-translator-3rdpartylib.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/translator/ejb/**"/>
+            <exclude name="org/jboss/test/deployers/weld/translator/ejb/SentenceParser.class"/>
+         </fileset>
+         <fileset dir="${source.resources}/deployers/weld/translator/ejb">
+            <include name="META-INF/beans.xml"/>
+         </fileset>
+      </jar>
+
+      <ear destfile="${build.lib}/weld-translator3rdpartylib.ear" appxml="${source.resources}/deployers/weld/translator3rdparty/META-INF/application.xml">
+         <fileset dir="${build.lib}">
+            <include name="weld-translator-3rdpartylib.jar"/>
+            <include name="weld-translator.war"/>
+         </fileset>
+      </ear>
+   </target>
+
+   <target name="numberguess" depends="compile">
+      <mkdir dir="${build.lib}" />
+      
+      <war warfile="${build.lib}/weld-numberguess.war"
+         webxml="${source.resources}/deployers/weld/numberguess/WEB-INF/web.xml">
+         <webinf dir="${source.resources}/deployers/weld/numberguess/WEB-INF">
+            <include name="faces-config.xml"/>
+            <include name="beans.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/deployers/weld/numberguess/**"/>
+         </classes>
+         <fileset dir="${source.resources}/deployers/weld/numberguess/">
+            <include name="home.xhtml"/>
+            <include name="index.html"/>
+            <include name="template.xhtml"/>
+         </fileset>
+      </war>
+
+   </target>
+
+   <target name="_jars-weld" depends="numberguess, translator, plainEjbTranslator,translatorWithManifestClasspath, translatorWith3rdPartyLib">
+      <mkdir dir="${build.lib}" />
+   </target>
+  
+</project>

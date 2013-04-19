@@ -1,0 +1,39 @@
+<assembly>
+    <id>all</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory></directory>
+            <includes>
+                <include>resteasy-jboss-beans.xml</include>
+                <include>resteasy-ejb-jboss-beans.xml</include>
+            </includes>
+            <outputDirectory>resteasy.deployer/META-INF</outputDirectory>
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <unpack>false</unpack>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>org.jboss.jbossas:jboss-as-resteasy</include>
+                <include>org.jboss.resteasy:resteasy-jaxrs</include>
+                <include>org.jboss.resteasy:jaxrs-api</include>
+                <include>org.jboss.resteasy:resteasy-jaxb-provider</include>
+                <include>org.jboss.resteasy:resteasy-jettison-provider</include>
+                <include>org.jboss.resteasy:resteasy-atom-provider</include>
+                <include>org.jboss.resteasy:resteasy-multipart-provider</include>
+                <include>org.jboss.resteasy:resteasy-jackson-provider</include>
+                <include>org.jboss.resteasy:resteasy-yaml-provider</include>
+                <include>org.jboss.resteasy:resteasy-cdi</include>
+                <include>org.jboss.resteasy:async-http-servlet-3.0</include>
+            </includes>
+            <outputDirectory>resteasy.deployer</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+</assembly>

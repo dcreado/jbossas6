@@ -1,0 +1,26 @@
+<assembly>
+  <id>src</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>..</directory>
+      <outputDirectory>jboss-${project.version}-src</outputDirectory>
+      <excludes>
+        <exclude>**/target/**</exclude>
+        <exclude>**/output/**</exclude>
+        <exclude>tools/**/bin/*</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>..</directory>
+      <outputDirectory>jboss-${project.version}-src</outputDirectory>
+      <includes>
+        <include>tools/**/bin/*</include>
+      </includes>
+      <fileMode>0755</fileMode>
+    </fileSet>
+  </fileSets>
+</assembly>

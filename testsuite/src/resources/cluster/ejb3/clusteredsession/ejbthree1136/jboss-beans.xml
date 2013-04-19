@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+  <bean name="SFSBCacheManipulator" class="org.jboss.test.cluster.ejb3.clusteredsession.ejbthree1136.SFSBCacheManipulator">
+    <property name="cacheContainerRegistry"><inject bean="CacheContainerRegistry"/></property>
+    <property name="cacheContainerName">sfsb-cache</property>
+    <property name="cacheName">jar=ejbthree1136-bean.jar,name=DoNothingBean,service=EJB3</property>
+  </bean>
+</deployment>

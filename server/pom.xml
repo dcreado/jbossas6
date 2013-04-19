@@ -1,0 +1,584 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-server</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Server</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (server module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>jjtree-jbossql</id>
+            <goals>
+              <goal>jjtree</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>org/jboss/ejb/plugins/cmp/ejbql/JBossQLParser.jjt</include>
+              </includes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>jjtree-ejbql</id>
+            <goals>
+              <goal>jjtree</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>org/jboss/ejb/plugins/cmp/ejbql/EJBQLParser.jjt</include>
+              </includes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>javacc</id>
+            <goals>
+              <goal>javacc</goal>
+            </goals>
+            <configuration>
+              <sourceDirectory>${project.build.directory}/generated-sources/jjtree/</sourceDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rmic-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>rmi-compile</id>
+            <goals>
+              <goal>rmic</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+              <includes>
+                <include>org/jboss/tm/usertx/server/UserTransactionSessionFactoryImpl.class</include>
+                <include>org/jboss/tm/usertx/server/UserTransactionSessionImpl.class</include>
+                <!--
+                <include>org/jboss/jmx/adaptor/rmi/RMIAdaptorImpl.class</include>
+                <include>org/jboss/jmx/connector/notification/RMIClientNotificationListener.class</include>
+                -->
+                <include>org/jboss/invocation/jrmp/server/JRMPInvoker.class</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assemble-jars</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/client.xml</descriptor>
+                <descriptor>src/assembly/jboss.xml</descriptor>
+                <descriptor>src/assembly/jboss-minimal.xml</descriptor>
+                <descriptor>src/assembly/jmx-adaptor-plugin.xml</descriptor>
+                <descriptor>src/assembly/jmx-invoker-adaptor-client.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+            <id>assemble-shutdown-jar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/shutdown.xml</descriptor>
+              </descriptors>
+              <archive>
+                <manifestEntries>
+                  <Main-Class>org.jboss.Shutdown</Main-Class>
+                  <Class-Path>../client/jbossall-client.jar ../client/log4j.jar ../lib/jboss-jmx.jar</Class-Path>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
+            <id>assemble-testsuite-support-jar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/testsuite-support.xml</descriptor>
+              </descriptors>
+              <archive>
+                <manifestEntries>
+                  <Main-Class>org.jboss.jmx.service.Deployer</Main-Class>
+                  <Class-Path>./ jnp-client.jar jboss-jmx.jar ../conf/ ../lib/jboss-jmx.jar</Class-Path>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>ant-run</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                
+                <filter token="default.type.mapping" value="Hypersonic SQL"/>
+                
+                <property name="build.bin" value="target/bin"/>
+                <mkdir dir="${build.bin}"/>
+                <copy todir="${build.bin}" filtering="no">
+                  <fileset dir="src/bin">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <fixcrlf srcdir="${build.bin}"
+                  eol="lf" eof="remove"
+                  includes="**/*.sh"/>
+            
+                <fixcrlf srcdir="${build.bin}"
+                  eol="crlf" eof="remove"
+                  includes="**/*.bat, **/*.cmd"/>
+            
+                <chmod perm="+x">
+                  <fileset dir="${build.bin}">
+                    <include name="**/*.sh"/>
+                  </fileset>
+                </chmod>
+                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                    <exclude name="manifest/**"/>
+                  </fileset>
+                </copy>
+                
+                <mkdir dir="target/resources"/>
+                <copy todir="target/resources" filtering="yes">
+                  <fileset dir="src/resources">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                                
+                <!-- uuid-key-generator.sar -->
+                <mkdir dir="target/uuid-key-generator.sar"/>
+                <copy todir="target/uuid-key-generator.sar">
+                  <fileset dir="target/classes">
+                    <include name="org/jboss/ejb/plugins/keygenerator/uuid/**"/>
+                  </fileset>
+                  <fileset dir="target/classes">
+                    <include name="org/jboss/ejb/plugins/keygenerator/hilo/**"/>
+                  </fileset>
+                  <fileset dir="src/resources/uuid-key-generator">
+                    <include name="**/*"/>
+                  </fileset>
+                </copy>
+
+                <!-- copy the service binding manager jars to their deployment --> 
+                <copy file="${maven.dependency.org.jboss.service.binding.jboss-service-binding-core.jar.path}"
+                      tofile="target/etc/conf/all/bindingservice.beans/jboss-service-binding-core.jar"/>
+                <copy file="${maven.dependency.org.jboss.service.binding.jboss-service-binding-mgmt.jar.path}"
+                      tofile="target/etc/conf/all/bindingservice.beans/jboss-service-binding-mgmt.jar"/>
+            
+                <!-- SQLException Processor -->
+                <copy todir="target"
+                  file="target/resources/exception-processor/sqlexception-service.xml"/>
+                
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>clean-output</id>
+            <goals>
+              <goal>clean</goal>
+            </goals>
+            <phase>clean</phase>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>output</directory>
+                </fileset>
+              </filesets>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>jboss</groupId>
+      <artifactId>jboss-serialization</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-deployment</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.bootstrap</groupId>
+      <artifactId>jboss-bootstrap-spi-as</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.jboss.ejb3.ejbref.resolver</groupId>
+        <artifactId>ejbref-resolver-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-deployment-spi</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate.javax.persistence</groupId>
+      <artifactId>hibernate-jpa-2.0-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jpa</groupId>
+      <artifactId>jboss-jpa-deployers</artifactId>
+      <exclusions>
+        <exclusion>
+	  <groupId>org.jboss.metadata</groupId>
+	  <artifactId>jboss-metadata</artifactId>
+	</exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.jpa</groupId>
+      <artifactId>jboss-jpa-vfs3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.reloaded.naming</groupId>
+      <artifactId>jboss-reloaded-naming-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.reloaded.naming</groupId>
+      <artifactId>jboss-reloaded-naming-deployers</artifactId>
+    </dependency>
+    
+    <dependency>
+       <groupId>org.jboss.injection</groupId>
+       <artifactId>jboss-injection</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.injection</groupId>
+       <artifactId>jboss-resolver-spi</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.injection</groupId>
+       <artifactId>jboss-resolver-impl</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.injection</groupId>
+       <artifactId>jboss-injection-switchboard-deployer</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.jboss.injection</groupId>
+       <artifactId>jboss-switchboard-metadata</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.injection</groupId>
+        <artifactId>jboss-injection-mc-impl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.jboss.managed.beans</groupId>
+        <artifactId>managed-beans-metadata</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-common</artifactId>
+      <exclusions>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-ejb-api</artifactId>
+	</exclusion>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-jms-api</artifactId>
+	</exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-ear</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-ejb</artifactId>
+      <exclusions>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-ejb-api</artifactId>
+	</exclusion>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-ejb-api_3.1</artifactId>
+	</exclusion>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-transaction-api</artifactId>
+	</exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-rar</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-war</artifactId>
+      <exclusions>
+        <exclusion>
+	  <groupId>jboss.web</groupId>
+	  <artifactId>servlet-api</artifactId>
+	</exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.ejb</groupId>
+      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.interceptor</groupId>
+      <artifactId>jboss-interceptors-api_1.1_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet</groupId>
+      <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
+      <artifactId>jboss-jsp-api_2.2_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.spec.javax.annotation</groupId>
+      <artifactId>jboss-annotations-api_1.1_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.switchboard</groupId>
+      <artifactId>jboss-switchboard-spi</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.switchboard</groupId>
+      <artifactId>jboss-switchboard-mc-spi</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.switchboard</groupId>
+      <artifactId>jboss-switchboard-javaee</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.switchboard</groupId>
+      <artifactId>jboss-switchboard-impl</artifactId>
+    </dependency>
+
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-security</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-transaction-spi</artifactId>
+      <exclusions>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-transaction-api</artifactId>
+	</exclusion>
+        <exclusion>
+	  <groupId>org.jboss.javaee</groupId>
+	  <artifactId>jboss-jca-api</artifactId>
+	</exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.security.jacc</groupId>
+      <artifactId>jboss-jacc-api_1.4_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_1.1_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.soap</groupId>
+      <artifactId>jboss-saaj-api_1.3_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.bind</groupId>
+      <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.ws</groupId>
+      <artifactId>jboss-jaxws-api_2.2_spec</artifactId>
+    </dependency>
+      
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.rpc</groupId>
+      <artifactId>jboss-jaxrpc-api_1.1_spec</artifactId>
+    </dependency>
+      
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnp-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.resource</groupId>
+      <artifactId>jboss-connector-api_1.5_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>bcel</groupId>
+      <artifactId>bcel</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>oswego-concurrent</groupId>
+      <artifactId>concurrent</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.remoting</groupId>
+      <artifactId>jboss-remoting</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnpserver</artifactId>     
+    </dependency>
+    
+    <dependency>
+      <groupId>gnu-getopt</groupId>
+      <artifactId>getopt</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.service.binding</groupId>
+      <artifactId>jboss-service-binding-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.service.binding</groupId>
+      <artifactId>jboss-service-binding-mgmt</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.scanning</groupId>
+      <artifactId>scanning-plugins</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.scanning</groupId>
+      <artifactId>scanning-deployers</artifactId>
+    </dependency>
+
+  </dependencies>
+  
+</project>

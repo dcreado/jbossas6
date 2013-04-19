@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+   <!-- ==================================================================== -->
+   <!-- MBean style HA singleton election definition                         -->
+   <!-- ==================================================================== -->
+
+   <!-- First HASingleton, Election policy is to choose the oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+          name="HASingletonMBeanExample_1">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_1", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonElectionPolicySimple"
+          name="HASingletonElectionPolicySimple_1">
+     <property name="position">0</property>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_1">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_1", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_1"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_1"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+
+   <!-- Second HASingleton, Election policy is to choose the youngest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+         name="HASingletonMBeanExample_2">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_2", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonElectionPolicySimple"
+          name="HASingletonElectionPolicySimple_2">
+     <property name="position">-1</property>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_2">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_2", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_2"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_2"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+
+   <!-- Third HASingleton, Election policy is to choose the 2nd oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+          name="HASingletonMBeanExample_3">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_3", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonElectionPolicySimple"
+          name="HASingletonElectionPolicySimple_3">
+     <property name="position">1</property>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_3">      
+          
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_3", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_3"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_3"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+
+   <!-- Fourth HASingleton, No election policy defined. By default, the oldest node is selected -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+          name="HASingletonMBeanExample_4">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_4", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_4">      
+          
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_4", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_4"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+   
+   <!-- 5th HASingleton, PreferredMaster set to localhost:0. Election policy is to choose the oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+          name="HASingletonMBeanExample_5">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_5", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.PreferredMasterElectionPolicy"
+          name="PreferredMasterElectionPolicy_1">
+     <property name="position">0</property>
+     <!-- JBAS-8540 -->
+     <property name="preferredMaster">${node0.bind.address.url:localhost}:1099</property>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_5">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_5", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="PreferredMasterElectionPolicy_1"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_5"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+
+   <!-- 6th HASingleton, PreferredMaster set to localhost:0. Election policy is to choose the youngest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonMBeanExample" 
+          name="HASingletonMBeanExample_6">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.examples:service=HASingletonMBeanExample_6", exposedInterface=org.jboss.test.cluster.hasingleton.HASingletonMBeanExampleMBean.class, registerDirectly=true)</annotation>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.PreferredMasterElectionPolicy"
+          name="PreferredMasterElectionPolicy_2">
+     <property name="position">-1</property>
+     <!-- JBAS-8540 -->
+     <property name="preferredMaster">${node0.bind.address.url:localhost}:1099</property>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonController_6">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="test:service=HASingletonController_6", exposedInterface=org.jboss.ha.singleton.HASingletonControllerMBean.class, registerDirectly=true)</annotation>       
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="PreferredMasterElectionPolicy_2"/></property>
+      <property name="target"><inject bean="HASingletonMBeanExample_6"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+      <property name="targetStopMethodArgument">true</property>
+   </bean>
+   
+   <!-- ==================================================================== -->
+   <!-- Pojo style HA singleton election definition                          -->
+   <!-- ==================================================================== -->
+   
+   <!-- First HASingleton, Election policy is to choose the oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+          name="HASingletonPojoExample_1">
+       <constructor><parameter>test/cluster/hasingleton/simplepojo/1</parameter></constructor>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonControllerForBean_1">
+
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_1"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_1"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>   
+
+   <!-- Second HASingleton, Election policy is to choose the youngest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+         name="HASingletonPojoExample_2">
+      <constructor><parameter>test/cluster/hasingleton/simplepojo/2</parameter></constructor>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonControllerForBean_2">
+          
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_2"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_2"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>
+
+   <!-- Third HASingleton, Election policy is to choose the 2nd oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+          name="HASingletonPojoExample_3">
+      <constructor><parameter>test/cluster/hasingleton/simplepojo/3</parameter></constructor>          
+   </bean>
+      
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+         name="HASingletonControllerForBean_3">      
+          
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="HASingletonElectionPolicySimple_3"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_3"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>
+
+   <!-- Fourth HASingleton, No election policy defined. By default, the oldest node is selected -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+          name="HASingletonPojoExample_4">
+      <constructor><parameter>test/cluster/hasingleton/simplepojo/4</parameter></constructor>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonControllerForBean_4">      
+          
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_4"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>
+   
+   <!-- 5th HASingleton, PreferredMaster set to localhost:0. Election policy is to choose the oldest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+          name="HASingletonPojoExample_5">
+      <constructor><parameter>test/cluster/hasingleton/simplepojo/5</parameter></constructor>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonControllerForBean_5">
+      
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="PreferredMasterElectionPolicy_1"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_5"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>
+      
+
+   <!-- 6th HASingleton, Election policy is to choose the youngest node as master -->
+   <bean class="org.jboss.test.cluster.hasingleton.HASingletonPojoExample" 
+         name="HASingletonPojoExample_6">
+      <constructor><parameter>test/cluster/hasingleton/simplepojo/6</parameter></constructor>
+   </bean>
+
+   <bean class="org.jboss.ha.singleton.HASingletonController" 
+          name="HASingletonControllerForBean_6">
+          
+      <property name="HAPartition"><inject bean="ElectionPolicyTestPartition"/></property>
+      <property name="electionPolicy"><inject bean="PreferredMasterElectionPolicy_2"/></property>
+      <property name="target"><inject bean="HASingletonPojoExample_6"/></property>
+      <property name="targetStartMethod">startSingleton</property>
+      <property name="targetStopMethod">stopSingleton</property>
+   </bean>
+   
+   
+   <!-- ==================================================================== -->
+   <!-- Partition used for testing failure to receive state                  -->
+   <!-- ==================================================================== -->
+   
+   <bean name="ElectionPolicyTestPartition"
+   		 class="org.jboss.ha.framework.server.ClusterPartition">     
+   		 
+      <!-- For this test we just create our own channel -->
+      <property name="channelFactory"><inject bean="JChannelFactory"/></property>
+      <property name="channelStackName">${jboss.multiplexer.stack:udp}</property>
+               
+      <!-- Name of the partition being built -->
+      <property name="partitionName">ElectionPolicyTestPartition</property>
+              
+      <!-- Max time (in ms) to wait for state transfer to complete. Increase for large states -->
+      <property name="stateTransferTimeout">2000</property>
+              
+      <!-- Max time (in ms) to wait for RPC calls to complete. -->
+      <property name="methodCallTimeout">5000</property>
+     
+   </bean>
+
+</deployment>

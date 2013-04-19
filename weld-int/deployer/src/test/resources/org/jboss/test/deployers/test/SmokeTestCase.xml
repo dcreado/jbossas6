@@ -1,0 +1,61 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <!-- Structure mocks -->
+
+  <bean name="EarStructure" class="org.jboss.test.deployers.vfs.structure.ear.support.MockEarStructureDeployer"/>
+  <bean name="WarStructure" class="org.jboss.test.deployers.vfs.structure.war.support.MockWarStructureDeployer"/>
+
+  <!-- Mock metadata deployer -->
+
+  <bean name="JBAppMDDeployer" class="org.jboss.test.deployers.support.deployer.MockJBossAppDeployer"/>
+  <bean name="JBWMDDeployer" class="org.jboss.test.deployers.support.deployer.MockWebDeployer"/>
+  <bean name="EjbJarDeployer" class="org.jboss.test.deployers.support.deployer.MockEjbJarDeployer"/>
+  <bean name="EjbMergeDeployer" class="org.jboss.test.deployers.support.deployer.MockCopyJBossDeployer"/>
+  <bean name="WarCLDeployer" class="org.jboss.test.deployers.support.deployer.MockWarClassLoaderDeployer"/>
+
+  <!-- Weld deployers -->
+
+  <!-- Responsible for discovering Weld files -->
+  <bean name="WeldFilesDeployer" class="org.jboss.weld.integration.deployer.metadata.WeldFilesDeployer"/>
+
+  <!-- Responsible for discovering Weld classes -->
+  <bean name="WeldDiscoveryDeployer" class="org.jboss.weld.integration.deployer.env.WeldDiscoveryDeployer"/>
+
+  <!-- Responsible for discovering Weld classes -->
+  <bean name="EjbServicesDeployer" class="org.jboss.weld.integration.deployer.env.EjbServicesDeployer"/>
+
+  <!-- Responsible for discovering Weld classes -->
+  <bean name="FlatDeploymentDeployer" class="org.jboss.weld.integration.deployer.env.FlatDeploymentDeployer"/>
+
+  <!-- Responsible for dynamic ejb dependency creation -->
+  <bean name="DynamicDependencyCreator" class="org.jboss.weld.integration.deployer.env.DynamicDependencyCreator">
+    <constructor>
+      <parameter><inject bean="jboss.kernel:service=KernelController"/></parameter>
+    </constructor>
+  </bean>
+
+  <!-- Responsible for booting Weld -->
+  <bean name="WeldBootstrapDeployer" class="org.jboss.weld.integration.deployer.env.WeldBootstrapDeployer"/>
+
+  <!-- Binds bootstrap to jndi -->
+  <bean name="JndiBinderDeployer" class="org.jboss.test.deployers.support.deployer.MockJndiBinder"/>
+
+  <!-- Missing real URL integration tests-->
+
+  <bean name="MockUrlIntegrationDeployer" class="org.jboss.test.deployers.support.deployer.MockUrlIntegrationDeployer"/>
+
+  <!-- Responsible for inserting the Weld EJB interceptor -->
+  <bean name="PostEjbJarMetadataDeployer" class="org.jboss.weld.integration.deployer.metadata.WeldEjbInterceptorMetadataDeployer"/>
+
+  <!-- Responsible for enabling classloader isolation for Weld jars -->
+  <bean name="PostJBossMetadataDeployer" class="org.jboss.weld.integration.deployer.metadata.PostJBossMetadataDeployer"/>
+
+  <!-- Responsible for enabling classloader isolation for Weld wars -->
+  <bean name="PostJBossWebMetadataDeployer" class="org.jboss.weld.integration.deployer.metadata.PostJBossWebMetadataDeployer"/>
+
+  <!-- Responsible for adding the Weld listener to the Servlet -->
+  <bean name="PostWebMetadataDeployer" class="org.jboss.weld.integration.deployer.metadata.PostWebMetadataDeployer"/>
+
+  <!-- Removed WeldJndiBinder -->
+
+</deployment>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<assembly xmlns="http://maven.apache.org/POM/4.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="
+              http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd
+          ">   
+   
+   <baseDirectory>weld.deployer</baseDirectory>
+   
+   <formats>
+      <format>zip</format>
+   </formats>
+   
+   <fileSets>
+      <fileSet>
+         <directory>src/main/assembly/resources</directory>
+         <outputDirectory></outputDirectory>
+      </fileSet>   
+   </fileSets>
+
+   <files>
+      <file>
+         <source>target/weld-core-jsf-only.jar</source>
+         <outputDirectory>lib-int</outputDirectory>
+      </file>
+      <file>
+         <source>target/weld-core-no-jsf.jar</source>
+         <outputDirectory></outputDirectory>
+      </file>
+   </files>
+
+   <dependencySets>
+      <dependencySet>
+         <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+         <includes>
+            <include>com.google.guava:guava</include>
+            <include>org.slf4j:slf4j-ext:jar</include>
+            <include>ch.qos.cal10n:cal10n-api</include>
+            <include>org.jboss.weld:weld-spi</include>
+            <include>org.jboss.jbossas:weld-int-ejb</include>
+            <include>org.jboss.jbossas:weld-int-deployer</include>
+            <include>org.jboss.jbossas:weld-int-deployer-mc-int</include>
+         </includes>
+      </dependencySet>
+      <dependencySet>
+         <useProjectArtifact>false</useProjectArtifact>
+         <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+         <outputDirectory>lib-int</outputDirectory>
+         <includes>
+            <include>org.jboss.jbossas:weld-int-webtier</include>
+            <include>org.jboss.kernel:jboss-weld-int</include>
+         </includes>
+      </dependencySet>
+   </dependencySets>
+   
+</assembly>

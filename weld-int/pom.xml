@@ -1,0 +1,54 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>org.jboss.jbossas</groupId>
+        <artifactId>jboss-as-parent</artifactId>
+        <version>6.1.1-SNAPSHOT</version>
+    </parent>
+    <name>JBoss Application Server Weld Integration</name>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-weld-int</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>assembly</module>
+        <module>deployer</module>
+        <module>deployer-mc-int</module>
+        <module>ejb</module>
+        <module>webtier</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jboss.jbossas</groupId>
+                <artifactId>weld-int-deployer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.jbossas</groupId>
+                <artifactId>weld-int-ejb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.jbossas</groupId>
+                <artifactId>weld-int-webtier</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+</project>

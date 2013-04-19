@@ -1,0 +1,21 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="EarStructure" class="org.jboss.test.deployers.vfs.structure.ear.support.MockEarStructureDeployer"/>
+  <bean name="WarStructure" class="org.jboss.test.deployers.vfs.structure.war.support.MockWarStructureDeployer"/>
+
+  <bean name="MockEjbJar" class="org.jboss.test.deployers.support.deployer.MockEjbJarDeployer"/>
+  <bean name="MockJBossApp" class="org.jboss.test.deployers.support.deployer.MockJBossAppDeployer"/>
+  <bean name="MockJBoss" class="org.jboss.test.deployers.support.deployer.MockJBossDeployer"/>
+  <bean name="MockJBossWeb" class="org.jboss.test.deployers.support.deployer.MockJBossWebDeployer"/>
+  <bean name="MockWeb" class="org.jboss.test.deployers.support.deployer.MockWebDeployer"/>
+  <bean name="MockMergeJBoss" class="org.jboss.test.deployers.support.deployer.MockMergeJBossDeployer"/>
+
+  <bean name="WeldFiles" class="org.jboss.weld.integration.deployer.metadata.WeldFilesDeployer"/>
+
+  <bean name="PostEjbJar" class="org.jboss.weld.integration.deployer.metadata.WeldEjbInterceptorMetadataDeployer"/>
+  <bean name="PostJBossApp" class="org.jboss.weld.integration.deployer.metadata.PostJBossAppMetadataDeployer"/>
+  <bean name="PostJBoss" class="org.jboss.weld.integration.deployer.metadata.PostJBossMetadataDeployer"/>
+  <bean name="PostJBossWeb" class="org.jboss.weld.integration.deployer.metadata.PostJBossWebMetadataDeployer"/>
+  <bean name="PostWeb" class="org.jboss.weld.integration.deployer.metadata.PostWebMetadataDeployer"/>
+
+</deployment>

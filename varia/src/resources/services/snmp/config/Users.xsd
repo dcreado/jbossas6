@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   XML Schema used by the SnmpAgent to configure users for SNMP v3
+   
+   Authors
+      <a href="mailto:jean.deruelle@gmail.com">Jean Deruelle</a>
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema">
+    
+   <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+         Schema describes the users for the SNMP v3 protocol.          
+      </xsd:documentation>
+   </xsd:annotation>
+
+   <xsd:element name="user-list">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="user" maxOccurs="unbounded">
+               <xsd:complexType>
+                  <xsd:sequence>
+                     <xsd:element name="securityName"       		type="xsd:string" />
+                     <xsd:element name="authenticationProtocol"		type="xsd:string" />
+                     <xsd:element name="authenticationPassphrase"   type="xsd:string" />
+                     <xsd:element name="privacyProtocol"		    type="xsd:string" />
+                     <xsd:element name="privacyPassphrase"   		type="xsd:string" />
+                  </xsd:sequence>
+               </xsd:complexType>
+            </xsd:element>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

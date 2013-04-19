@@ -1,0 +1,6 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+  <bean name="First" class="org.jboss.test.deployers.support.mcandweld.bidirectional.mcend.end.First">
+    <annotation>@org.jboss.kernel.weld.metadata.api.annotations.WeldEnabled</annotation>
+   </bean>
+  <weld xmlns="urn:jboss:weld-beans:1.0" name="Last" class="org.jboss.test.deployers.support.mcandweld.bidirectional.mcend.end.Last"/>
+</deployment>

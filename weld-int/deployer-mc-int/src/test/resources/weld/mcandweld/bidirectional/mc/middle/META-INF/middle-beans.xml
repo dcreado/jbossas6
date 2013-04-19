@@ -1,0 +1,5 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+  <bean name="Middle" class="org.jboss.test.deployers.support.mcandweld.bidirectional.mcmiddle.middle.Middle">
+    <annotation>@org.jboss.kernel.weld.metadata.api.annotations.WeldEnabled</annotation>
+  </bean>
+</deployment>

@@ -1,0 +1,116 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-console</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Command Line Client</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (command line client module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly-console</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/console.xml</descriptor>
+              </descriptors>
+              <archive>
+                <manifestEntries>
+                  <Main-Class>org.jboss.console.text.CommandLineConsole</Main-Class>
+                  <Class-Path>../client/getopt.jar ../client/jboss-common-client.jar ../client/jboss-system-client.jar ../client/jmx-rmi-connector-client.jar ../client/jnp-client.jar ../client/jboss-j2ee.jar ../client/log4j.jar ../client/jnet.jar ../lib/jboss-jmx.jar </Class-Path>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </execution>
+          <execution>
+            <id>assembly-all</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/twiddle.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                
+                <property name="output.bin" location="target/bin"/>
+                <mkdir dir="${output.bin}"/>
+                <copy todir="${output.bin}" filtering="yes">
+                  <fileset dir="src/bin">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <property name="output.resources" location="target/resources"/>
+                <mkdir dir="${output.resources}"/>
+                <copy todir="${output.resources}" filtering="yes">
+                  <fileset dir="src/resources">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>gnu-getopt</groupId>
+      <artifactId>getopt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-management</artifactId>
+    </dependency>
+    <!-- Not a dependency of twiddle but needed to make the thirdparty library
+         built pass?! jboss.web:jsp-api:jar is not defined, otherwise -->
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet.jsp</groupId>
+      <artifactId>jboss-jsp-api_2.2_spec</artifactId>
+    </dependency>
+  </dependencies>
+  
+</project>

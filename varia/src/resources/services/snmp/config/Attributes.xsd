@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   Schema used by the SnmpAgent to define the attributes we want to be monitored.
+   
+   Authors
+      <a href="mailto:tom.hauser@gmail.com">Tom Hauser</a>
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema">
+
+<xsd:annotation>
+   <xsd:documentation xml:lang="en">
+      Schema for attributes.xml used by applications.   
+   </xsd:documentation>
+</xsd:annotation>
+
+<xsd:element name="attribute-mappings">
+ <xsd:complexType>
+  <xsd:sequence>
+   <xsd:element name="mbean" maxOccurs="unbounded">
+    <xsd:complexType>
+      <xsd:sequence>
+       <xsd:element name="attribute" maxOccurs="unbounded">
+        <xsd:complexType>
+         <xsd:all/> 
+          <xsd:attribute name="name"/>
+          <xsd:attribute name="oid" use="required" type="xsd:string"/>
+          <xsd:attribute name="mode" use="optional" type="xsd:string"/>
+          <xsd:attribute name="snmp-type" use="optional" type="xsd:string"/>
+          <xsd:attribute name="max-access" use="optional" type="xsd:string"/>
+          <xsd:attribute name="description" use="optional" type="xsd:string"/>
+          <xsd:attribute name="status" use="optional" type="xsd:string"/>
+          <xsd:attribute name="table" use="optional" type="xsd:string"/>
+        </xsd:complexType>
+      </xsd:element>
+      </xsd:sequence> 
+     <xsd:attribute name="name" type="xsd:string" use="required"/>
+     <xsd:attribute name="oid-prefix" use="optional" type="xsd:string"/>
+     <xsd:attribute name="definition-name" use="optional" type="xsd:string"/>
+     <xsd:attribute name="table-name" use="optional" type="xsd:string"/>
+     <xsd:attribute name="description" use="optional" type="xsd:string"/>
+     <xsd:attribute name="status" use="optional" type="xsd:string"/>
+    </xsd:complexType>
+   </xsd:element>
+  </xsd:sequence>
+ </xsd:complexType>
+</xsd:element>
+
+</xsd:schema>
+
+

@@ -1,0 +1,929 @@
+<?xml version="1.0"?>
+
+<project name="crashrecovery-tests" default="as-tests" basedir="."
+         xmlns:astest="http://jboss.org/ns/test/ant/astest">
+
+  <property environment="env"/>
+  <property name="jboss.home" value="${env.JBOSS_HOME}"/>
+  <property name="product.dir" value="${env.DTF_HOME}/JBossTS-JTA-QA/"/>
+
+  <property name="astest.jar.dir" value="${product.dir}/qa/resources"/>
+  <property name="astest.jar.name" value="astest.jar"/>
+  <property name="astest.jar.deploy.dir" value="qa/lib"/>
+
+  <property name="node0" value="localhost" />
+  <property name="node1" value="192.168.1.106" />
+
+  <property name="driver.home" value="${product.dir}/dbdrivers"/>
+
+  <!--
+      import configuration settings for the tests
+    -->
+  <import file="imports/test-config.xml"/>
+  
+  
+  <!--
+      Main targets intended for JBossAS Testsuite optional task
+    -->
+  <target name="crash-tests" depends="want-all-dbs, want-all-tstypes, want-all-tsdemarc, want-all-testcases, crash-tests-single" />
+  
+  <target name="crash-tests-single-db" depends="want-all-tstypes, want-all-tsdemarc, want-all-testcases, crash-tests-single" />
+
+  <target name="crash-tests-single-db-tstype" depends="want-all-tsdemarc, want-all-testcases, crash-tests-single" />
+  
+  <target name="crash-tests-single" depends="init, set-db, prepare-drivers, set-tstype, set-tsdemarc, set-testcase, crash-tests-tstype-jta, crash-tests-tstype-jts" />
+
+
+  <target name="jts-propagation-tests" depends="want-all-ejbX, want-all-transports, jts-propagation-tests-single" />
+
+  <target name="jts-propagation-tests-single" depends="init-propagation-tests, set-db, prepare-drivers, set-ejbX, set-transport, propag-tests-select-db" />
+
+	
+  <!--
+      Other targets... 
+   -->
+  <target name="init">
+  	<echo message="jboss.home=${jboss.home}"/>
+    <property name="wipeOutTxsInDoubt" value="true" />
+  </target>
+  
+  <target name="set-db">
+    <condition property="want.psql_8.2">
+       <equals arg1="${jbossts.db}" arg2="psql_8.2"/>
+    </condition>
+    <condition property="want.psql_8.3">
+       <equals arg1="${jbossts.db}" arg2="psql_8.3"/>
+    </condition>
+    <condition property="want.psql_8.4">
+       <equals arg1="${jbossts.db}" arg2="psql_8.4"/>
+    </condition>
+    <condition property="want.psql_9.0">
+       <equals arg1="${jbossts.db}" arg2="psql_9.0"/>
+    </condition>
+    <condition property="want.sybase_15">
+       <equals arg1="${jbossts.db}" arg2="sybase_15"/>
+    </condition>
+    <condition property="want.sybase_15.5">
+       <equals arg1="${jbossts.db}" arg2="sybase_15.5"/>
+    </condition>
+    <condition property="want.oracle_10">
+       <equals arg1="${jbossts.db}" arg2="oracle_10"/>
+    </condition>
+    <condition property="want.oracle_11">
+       <equals arg1="${jbossts.db}" arg2="oracle_11"/>
+    </condition>
+    <condition property="want.oracle_11_r2">
+       <equals arg1="${jbossts.db}" arg2="oracle_11_r2"/>
+    </condition>
+    <condition property="want.db2_9.7">
+       <equals arg1="${jbossts.db}" arg2="db2_9.7"/>
+    </condition>
+    <condition property="want.mysql_5.0">
+       <equals arg1="${jbossts.db}" arg2="mysql_5.0"/>
+    </condition>
+    <condition property="want.mysql_5.1">
+       <equals arg1="${jbossts.db}" arg2="mysql_5.1"/>
+    </condition>
+    <condition property="want.mssql_2005">
+       <equals arg1="${jbossts.db}" arg2="mssql_2005"/>
+    </condition>
+    <condition property="want.mssql_2008">
+       <equals arg1="${jbossts.db}" arg2="mssql_2008"/>
+    </condition>
+    <condition property="want.oracle_rac">
+       <equals arg1="${jbossts.db}" arg2="oracle_rac"/>
+    </condition>
+    <condition property="want.oracle_rac_lb">
+       <equals arg1="${jbossts.db}" arg2="oracle_rac_lb"/>
+    </condition>
+    <condition property="want.oracle_rac_r2">
+       <equals arg1="${jbossts.db}" arg2="oracle_rac_r2"/>
+    </condition>
+    <condition property="want.oracle_rac_r2_lb">
+       <equals arg1="${jbossts.db}" arg2="oracle_rac_r2_lb"/>
+    </condition>
+  </target>
+	
+  <target name="want-all-dbs">
+  	<property name="want.psql_8.2" value="true" />
+  	<property name="want.psql_8.3" value="true" />
+  	<property name="want.psql_8.4" value="true" />
+  	<property name="want.psql_9.0" value="true" />
+  	<property name="want.sybase_15" value="true" />
+  	<property name="want.sybase_15.5" value="true" />
+  	<property name="want.oracle_10" value="true" />
+  	<property name="want.oracle_11" value="true" />
+  	<property name="want.oracle_11_r2" value="true" />
+  	<property name="want.db2_9.7" value="true" />
+  	<property name="want.mysql_5.0" value="true" />
+  	<property name="want.mysql_5.1" value="true" />
+  	<property name="want.mssql_2005" value="true" />
+  	<property name="want.mssql_2008" value="true" />
+  	<property name="want.oracle_rac" value="true" />
+  	<property name="want.oracle_rac_lb" value="true" />
+  	<property name="want.oracle_rac_r2" value="true" />
+  	<property name="want.oracle_rac_r2_lb" value="true" />
+  </target>
+
+  <target name="set-tstype">
+    <condition property="want.tstype.jta">
+       <equals arg1="${jbossts.tstype}" arg2="jta"/>
+    </condition>
+    <condition property="want.tstype.jts">
+       <equals arg1="${jbossts.tstype}" arg2="jts"/>
+    </condition>
+  </target>
+	
+  <target name="want-all-tstypes">
+  	<property name="want.tstype.jta" value="true" />
+  	<property name="want.tstype.jts" value="true" />
+  </target>
+
+  <target name="set-tsdemarc">
+    <condition property="want.cmt">
+       <equals arg1="${jbossts.tsdemarc}" arg2="cmt"/>
+    </condition>
+    <condition property="want.bmt">
+       <equals arg1="${jbossts.tsdemarc}" arg2="bmt"/>
+    </condition>
+  </target>
+	
+  <target name="want-all-tsdemarc">
+  	<property name="want.cmt" value="true" />
+  	<property name="want.bmt" value="true" />
+  </target>
+
+  <target name="set-testcase">
+    <condition property="want.none">
+       <equals arg1="${jbossts.testcase}" arg2="none"/>
+    </condition>
+    <condition property="want.none.rev">
+       <equals arg1="${jbossts.testcase}" arg2="none.rev"/>
+    </condition>
+    <condition property="want.prepare_ex">
+       <equals arg1="${jbossts.testcase}" arg2="prepare_ex"/>
+    </condition>
+    <condition property="want.prepare_ex.rev">
+       <equals arg1="${jbossts.testcase}" arg2="prepare_ex.rev"/>
+    </condition>
+    <condition property="want.prepare_halt">
+       <equals arg1="${jbossts.testcase}" arg2="prepare_halt"/>
+    </condition>
+    <condition property="want.prepare_halt.rev">
+       <equals arg1="${jbossts.testcase}" arg2="prepare_halt.rev"/>
+    </condition>
+    <condition property="want.commit_halt">
+       <equals arg1="${jbossts.testcase}" arg2="commit_halt"/>
+    </condition>
+    <condition property="want.commit_halt.rev">
+       <equals arg1="${jbossts.testcase}" arg2="commit_halt.rev"/>
+    </condition>
+  </target>
+	
+  <target name="want-all-testcases">
+    <property name="want.prepare_ex" value="true" />
+    <property name="want.prepare_ex.rev" value="true" />
+    <property name="want.prepare_halt" value="true" />
+    <property name="want.prepare_halt.rev" value="true" />
+    <property name="want.commit_halt.rev" value="true" />
+  </target>
+
+	
+  <target name="crash-tests-tstype-jta" if="want.tstype.jta">
+  	<antcall target="call-tests-for-all-dbs"><param name="tstype" value="jta"/><param name="call.target" value="crash-tests-for-database"/></antcall>
+  </target>
+  
+  <target name="crash-tests-tstype-jts" if="want.tstype.jts">
+  	<antcall target="call-tests-for-all-dbs"><param name="tstype" value="jts"/><param name="call.target" value="crash-tests-for-database"/></antcall>
+  </target>
+
+  <target name="call-tests-for-all-dbs">
+  	<antcall target="call-tests-for-psql_8.2"/>
+  	<antcall target="call-tests-for-psql_8.3"/>
+  	<antcall target="call-tests-for-psql_8.4"/>
+  	<!--antcall target="call-tests-for-psql_9.0"/-->
+  	<antcall target="call-tests-for-oracle_10"/>
+  	<antcall target="call-tests-for-oracle_11"/>
+  	<antcall target="call-tests-for-oracle_11_r2"/>
+  	<antcall target="call-tests-for-mssql_2005"/>
+  	<antcall target="call-tests-for-mssql_2008"/>
+  	<antcall target="call-tests-for-mysql_5.0"/>
+  	<antcall target="call-tests-for-mysql_5.1"/>
+  	<antcall target="call-tests-for-db2_9.7"/>
+  	<antcall target="call-tests-for-sybase_15"/>
+  	<antcall target="call-tests-for-sybase_15.5"/>
+  	<antcall target="call-tests-for-oracle_rac"/>
+  	<antcall target="call-tests-for-oracle_rac_lb"/>
+  	<antcall target="call-tests-for-oracle_rac_r2"/>
+  	<antcall target="call-tests-for-oracle_rac_r2_lb"/>
+  </target>
+
+  <target name="call-tests-for-psql_8.2" if="want.psql_8.2">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.psql_8.2}"/>
+      <param name="datasource" value="postgres82-xa-ds.xml" /> 
+   	  <param name="dbname" value="psql82" /> 
+    </antcall>
+  </target>
+	
+  <target name="call-tests-for-psql_8.3" if="want.psql_8.3">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.psql_8.3}"/>
+      <param name="datasource" value="postgres83-xa-ds.xml" /> 
+   	  <param name="dbname" value="psql83" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-psql_8.4" if="want.psql_8.4">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.psql_8.4}"/>
+      <param name="datasource" value="postgres84-xa-ds.xml" /> 
+   	  <param name="dbname" value="psql84" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-psql_9.0" if="want.psql_9.0">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.psql_9.0}"/>
+      <param name="datasource" value="postgres90-xa-ds.xml" /> 
+   	  <param name="dbname" value="psql90" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_10" if="want.oracle_10">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.oracle_10}"/>
+  	  <param name="datasource" value="oracle10-xa-ds.xml" /> 
+   	  <param name="dbname" value="oracle10" /> 
+    </antcall>
+  </target>
+  	
+  <target name="call-tests-for-oracle_11" if="want.oracle_11">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.oracle_11}"/>
+  	  <param name="datasource" value="oracle11-xa-ds.xml" /> 
+   	  <param name="dbname" value="oracle11" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_11_r2" if="want.oracle_11_r2">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.oracle_11}"/>
+      <param name="datasource" value="oracle11-r2-xa-ds.xml" /> 
+      <param name="dbname" value="oracle11_r2" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_rac" if="want.oracle_rac">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.oracle_11_rac}"/>
+      <param name="datasource" value="oracle-rac-xa-ds.xml" /> 
+      <param name="dbname" value="oracle_rac" /> 
+      <param name="recovery.datasource" value="RecoveryDS" />
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_rac_lb" if="want.oracle_rac_lb">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.oracle_11_rac}"/>
+      <param name="datasource" value="oracle-rac-lb-xa-ds.xml" /> 
+      <param name="dbname" value="oracle_rac_lb" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_rac_r2" if="want.oracle_rac_r2">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.oracle_11_rac}"/>
+      <param name="datasource" value="oracle-rac-r2-xa-ds.xml" /> 
+      <param name="dbname" value="oracle_rac_r2" /> 
+      <param name="recovery.datasource" value="RecoveryDS" />
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-oracle_rac_r2_lb" if="want.oracle_rac_r2_lb">
+    <antcall target="${call.target}">
+      <param name="dbdriver" value="${driver.name.oracle_11_rac}"/>
+      <param name="datasource" value="oracle-rac-r2-lb-xa-ds.xml" /> 
+      <param name="dbname" value="oracle_rac_r2_lb" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-mssql_2005" if="want.mssql_2005">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.mssql_2005}"/>
+  	  <param name="datasource" value="mssql2005-xa-ds.xml" /> 
+   	  <param name="dbname" value="mssql2005" /> 
+    </antcall>
+  </target>
+	
+  <target name="call-tests-for-mssql_2008" if="want.mssql_2008">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.mssql_2008}"/>
+  	  <param name="datasource" value="mssql2008-xa-ds.xml" /> 
+   	  <param name="dbname" value="mssql2008" /> 
+    </antcall>
+  </target>
+  	
+  <target name="call-tests-for-mysql_5.0" if="want.mysql_5.0">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.mysql_5.0}"/>
+  	  <param name="datasource" value="mysql50-xa-ds.xml" /> 
+   	  <param name="dbname" value="mysql50" /> 
+    </antcall>
+  </target>
+	             
+  <target name="call-tests-for-mysql_5.1" if="want.mysql_5.1">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.mysql_5.1}"/>
+  	  <param name="datasource" value="mysql51-xa-ds.xml" /> 
+   	  <param name="dbname" value="mysql51" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-db2_9.7" if="want.db2_9.7">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.db2_9.7}" />
+  	  <param name="datasource" value="db2_97-xa-ds.xml" /> 
+   	  <param name="dbname" value="db2_9" /> 
+    </antcall>
+  </target>
+	  	
+  <target name="call-tests-for-sybase_15" if="want.sybase_15">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.sybase_15}"/>
+  	  <param name="datasource" value="sybase15-xa-ds.xml" /> 
+   	  <param name="dbname" value="sybase15" /> 
+    </antcall>
+  </target>
+
+  <target name="call-tests-for-sybase_15.5" if="want.sybase_15.5">
+  	<antcall target="${call.target}">
+  	  <param name="dbdriver" value="${driver.name.sybase_15}"/>
+  	  <param name="datasource" value="sybase15.5-xa-ds.xml" /> 
+   	  <param name="dbname" value="sybase15.5" /> 
+    </antcall>
+  </target>
+
+
+  <target name="crash-tests-for-database" depends="crash-tests-for-database-cmt, crash-tests-for-database-bmt" />
+
+  <target name="crash-tests-for-database-cmt" if="want.cmt">
+    <antcall target="crash-tests-all-testcases"><param name="cmt" value="true" /></antcall>
+  </target>
+	
+  <target name="crash-tests-for-database-bmt" if="want.bmt">
+    <antcall target="crash-tests-all-testcases"><param name="cmt" value="false" /></antcall>
+  </target>
+	
+	
+  <target name="crash-tests-all-testcases" 
+  		depends="testcase-none,
+  		         testcase-none-rev,
+  				 testcase-prepare_ex, 
+  		         testcase-prepare_ex-rev, 
+  		         testcase-prepare_halt, 
+  		         testcase-prepare_halt-rev, 
+  		         testcase-commit_halt-rev" />
+
+  <target name="testcase-none" if="want.none">
+        <antcall target="execute-crash-recovery-test">
+            <param name="specs" value="none"/><param name="reverseOrder" value="false"/><param name="rollbackExpected" value="false"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-none-rev" if="want.none.rev">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="none"/><param name="reverseOrder" value="true"/><param name="rollbackExpected" value="false"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-prepare_ex" if="want.prepare_ex">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="prepare_ex"/><param name="reverseOrder" value="false"/><param name="rollbackExpected" value="true"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-prepare_ex-rev" if="want.prepare_ex.rev">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="prepare_ex"/><param name="reverseOrder" value="true"/><param name="rollbackExpected" value="true"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-prepare_halt" if="want.prepare_halt">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="prepare_halt"/><param name="reverseOrder" value="false"/><param name="rollbackExpected" value="true"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-prepare_halt-rev" if="want.prepare_halt.rev">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="prepare_halt"/><param name="reverseOrder" value="true"/><param name="rollbackExpected" value="true"/>
+        </antcall>
+  </target>
+
+  <target name="testcase-commit_halt-rev" if="want.commit_halt.rev">
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="commit_halt"/><param name="reverseOrder" value="true"/><param name="rollbackExpected" value="false"/>
+        </antcall>  	
+  </target>
+
+  <target name="testcase-commit_halt" if="want.commit_halt">
+        <!-- DISABLED test-case: this test scenario is invalid for the current version of JBossTS --> 
+        <antcall target="execute-crash-recovery-test">
+        	<param name="specs" value="commit_halt"/><param name="reverseOrder" value="false"/><param name="rollbackExpected" value="false"/>
+        </antcall>
+  </target>
+
+  <target name="execute-crash-recovery-test" depends="hack-before-astest-run, crash-recovery-test, hack-after-astest-run" />
+
+  <!--
+    Note: If you want to wipe out txs in doubt before and after test you have to set property 'wipeOutTxsInDoubt' to true.
+    -->
+  <target name="crash-recovery-test">
+<!--    <attribute name="specs"/>
+    <attribute name="datasource"/>
+    <attribute name="dbdriver"/>
+    <attribute name="dbname"/>
+    <attribute name="cmt"/>
+    <attribute name="tstype"/>
+    <attribute name="reverseOrder"/>
+    <attribute name="rollbackExpected"/>  -->
+    <sequential>
+      
+      <condition property="test.name.cmt" value="cmt" else="bmt">
+      	<istrue value="${cmt}"/>
+      </condition>
+      <condition property="test.name.reverseOrder" value="-reverse" else="">
+        <istrue value="${reverseOrder}"/>
+      </condition>
+      <property name="testname" value="${tstype}-${specs}-${test.name.cmt}${test.name.reverseOrder}-${jbossts.credentials}"/>
+
+      <condition property="astest.app.jar.name" value="${astest.alternative.jar.name}">
+        <isset property="astest.alternative.jar.name"/>
+      </condition>
+      <property name="astest.app.jar.name" value="${astest.jar.name}" />
+
+      <condition property="storeType" value="StateManager/BasicAction/TwoPhaseCoordinator/ArjunaTransactionImple">
+        <equals arg1="${tstype}" arg2="jts" />
+      </condition>
+      <property name="storeType" value="StateManager/BasicAction/TwoPhaseCoordinator/AtomicAction" />
+     
+      <property name="recovery.datasource" value="CrashRecoveryDS" />
+  	
+      <deploy-datasource-and-set-credentials from="${product.dir}/resources/${datasource}" to="${jboss.home}/server/crashrecovery-${tstype}/deploy/${datasource}" />
+      <astest:server method="start" serverName="crashrecovery-${tstype}" >
+        <deploy from="dbdrivers/${dbdriver}" to="lib/${dbdriver}" />
+        <deploy from="${astest.jar.deploy.dir}/${astest.app.jar.name}" to="deploy/${astest.app.jar.name}" />
+      </astest:server>
+      <astest:action abortOnFail="false" waitFor="10000" impl="org.jboss.test.jbossts.taskdefs.JUnitClientAction">
+        <param key="testClass" value="org.jboss.test.jbossts.ASCrashRecovery01.TestWithJPA" />
+        <param key="name" value="${dbname}-${testname}" />
+        <param key="serverName" value="crashrecovery-${tstype}" />
+        <param key="specs" value="${specs}" />
+        <param key="cmt" value="${cmt}" />
+        <param key="storeType" value="${storeType}" />
+        <param key="reverseOrder" value="${reverseOrder}" />
+        <param key="rollbackExpected" value="${rollbackExpected}" />
+        <param key="wipeOutTxsInDoubtBeforeTest" value="${wipeOutTxsInDoubtBeforeTest}" />
+        <param key="wipeOutTxsInDoubt" value="${wipeOutTxsInDoubt}" />
+        <param key="debug" value="true" />
+        <param key="reportFile" value="${build.reports}/TEST-org.jboss.test.jbossts.ASCrashRecovery01.TestWithJPA-${dbname}-${testname}.xml" />
+        <param key="testTime" value="${testTime}" />
+        <param key="recoveryDatasource" value="${recovery.datasource}" />
+      </astest:action>
+      <astest:server method="stop" serverName="crashrecovery-${tstype}" >
+        <undeploy from="deploy/${astest.app.jar.name}" />
+        <undeploy from="lib/${dbdriver}" />
+      </astest:server>
+
+      <!-- archive artifacts -->
+      <zip destfile="${jboss.home}/server/crashrecovery-${tstype}/server-${dbname}-${testname}.artifacts.zip">
+        <fileset dir="${jboss.home}/server/crashrecovery-${tstype}">
+          <include name="log/boot.log"/>
+          <include name="log/server.log"/>
+          <include name="data/tx-object-store/**"/>
+          <include name="deploy/*-ds.xml"/>
+          <exclude name="deploy/hsqldb-ds.xml"/>
+        </fileset>
+      </zip>
+      <delete file="${jboss.home}/server/crashrecovery-${tstype}/deploy/${datasource}"/>
+      <delete file="${jboss.home}/server/crashrecovery-${tstype}/log/server.log"/>
+      <delete dir="${jboss.home}/server/crashrecovery-${tstype}/data/tx-object-store"/>
+    	
+      <!-- delete work and tmp dirs otherwise tests failed due to permgen space - FIXME is this the right way how to ensure that? -->
+      <delete dir="${jboss.home}/server/crashrecovery-${tstype}/work"/>
+      <delete dir="${jboss.home}/server/crashrecovery-${tstype}/tmp"/>
+      
+    </sequential>
+  </target>
+
+  <macrodef name="deploy-datasource-and-set-credentials">
+    <attribute name="from"/>
+    <attribute name="to"/>
+    <sequential>
+    	
+      <condition property="recover.credentials" value="&lt;xa-datasource-property name=&quot;User&quot;&gt;crashrec&lt;/xa-datasource-property&gt;&lt;xa-datasource-property name=&quot;Password&quot;&gt;crashrec&lt;/xa-datasource-property&gt;">
+         <equals arg1="${jbossts.credentials}" arg2="cr1"/>
+      </condition>
+      <condition property="recover.credentials" value="&lt;user-name&gt;crash0&lt;/user-name&gt;&lt;password&gt;crash0&lt;/password&gt;&lt;recover-user-name&gt;crashrec&lt;/recover-user-name&gt;&lt;recover-password&gt;crashrec&lt;/recover-password&gt;">
+         <equals arg1="${jbossts.credentials}" arg2="cr2"/>
+      </condition>
+      <condition property="recover.credentials" value="&lt;security-domain&gt;CrashRecoveryDomain0&lt;/security-domain&gt;&lt;recover-user-name&gt;crashrec&lt;/recover-user-name&gt;&lt;recover-password&gt;crashrec&lt;/recover-password&gt;">
+         <equals arg1="${jbossts.credentials}" arg2="cr3"/>
+      </condition>
+      <condition property="recover.credentials" value="&lt;security-domain&gt;CrashRecoveryDomain0&lt;/security-domain&gt;&lt;recover-security-domain&gt;CrashRecoveryDomain&lt;/recover-security-domain&gt;">
+         <equals arg1="${jbossts.credentials}" arg2="cr4"/>
+      </condition>
+    	
+      <echo message="Datasource: @{to}"/>
+      <echo message="Setting DS credentials to: ${recover.credentials}"/>
+    	
+      <copy file="@{from}" tofile="@{to}">
+        <filterset>
+          <filter token="CREDENTIALS" value="${recover.credentials}"/>
+        </filterset>	
+	  </copy>
+    </sequential>
+  </macrodef>
+
+  <target name="hack-before-astest-run" depends="hack-before-astest-run-for-db2_9.7" />
+  
+  <target name="hack-after-astest-run" depends="hack-after-astest-run-for-db2_9.7" />
+  
+  <target name="hack-before-astest-run-for-db2_9.7" if="want.db2_9.7">
+  	<!-- prepare hacked astest jar -->
+  	<property name="astest.alternative.jar.name" value="db2-${astest.jar.name}" />
+  	
+  	<available file="${astest.jar.dir}/${astest.alternative.jar.name}" 
+  	    property="have.db2.astest.alternative.jar" />
+    <antcall target="prepare-db2-alternative-jar" />
+  </target>
+  
+  <target name="prepare-db2-alternative-jar" unless="have.db2.astest.alternative.jar">
+  	<mkdir dir="${astest.jar.dir}/${astest.alternative.jar.name}_content"/>
+  	<unjar src="${astest.jar.dir}/${astest.jar.name}" dest="${astest.jar.dir}/${astest.alternative.jar.name}_content" />
+  	<available file="${astest.jar.dir}/${astest.alternative.jar.name}_content/META-INF/persistence.xml" 
+  	    property="have.persistence.xml" />
+  	<antcall target="change-hbm2ddl-update-to-none" />
+  	<jar destfile="${astest.jar.dir}/${astest.alternative.jar.name}">
+        <fileset dir="${astest.jar.dir}/${astest.alternative.jar.name}_content"/>
+  	</jar>
+  	<delete dir="${astest.jar.dir}/${astest.alternative.jar.name}_content" />
+  </target>
+  
+  <target name="change-hbm2ddl-update-to-none" if="have.persistence.xml">
+  	<replace file="${astest.jar.dir}/${astest.alternative.jar.name}_content/META-INF/persistence.xml" summary="true">
+  		<replacetoken><![CDATA[name="hibernate.hbm2ddl.auto" value="update"]]></replacetoken>
+  		<replacevalue><![CDATA[name="hibernate.hbm2ddl.auto" value="none"  ]]></replacevalue> 
+  	</replace>
+  </target>
+  
+  <target name="hack-after-astest-run-for-db2_9.7" if="want.db2_9.7">
+  	<!-- nothing to do here -->
+  </target>
+  
+  
+  <!-- 
+    Do use this target if you want to wipe out txs in doubt in all databases. 
+    -->
+  <target name="wipeout-txs-indoubt-all-dbs" depends="want-all-dbs, wipeout-txs-indoubt-single-db" />
+
+  <!-- 
+    Do use this target if you want to wipe out txs in doubt.
+    You can select the databases by setting jbossts.db property, see the 'set-db' target.
+   -->
+  <target name="wipeout-txs-indoubt-single-db" depends="set-db, prepare-drivers">
+    <property name="tstype" value="jta" />
+  	<antcall target="call-tests-for-all-dbs"><param name="call.target" value="execute-wipeout-txs-indoubt"/></antcall>
+  </target>
+  
+  <target name="execute-wipeout-txs-indoubt" depends="hack-before-astest-run, wipeout-txs-indoubt, hack-after-astest-run"/>
+  
+  <target name="wipeout-txs-indoubt">
+      <condition property="astest.app.jar.name" value="${astest.alternative.jar.name}">
+        <isset property="astest.alternative.jar.name"/>
+      </condition>
+      <property name="astest.app.jar.name" value="${astest.jar.name}" />
+
+      <astest:server method="start" serverName="crashrecovery-jta" >
+        <deploy from="dbdrivers/${dbdriver}" to="lib/${dbdriver}" />
+        <deploy from="resources/${datasource}" to="deploy/${datasource}" />
+        <deploy from="${astest.jar.deploy.dir}/${astest.app.jar.name}" to="deploy/${astest.app.jar.name}" />
+      </astest:server>
+      <astest:action abortOnFail="false" waitFor="10000" impl="org.jboss.test.jbossts.taskdefs.JUnitClientAction">
+        <param key="testClass" value="org.jboss.test.jbossts.ASCrashRecovery01.WipeOutTxsInDoubt" />
+        <param key="name" value="test-wipeout-txs-indoubt-${dbname}" />
+        <param key="serverName" value="crashrecovery-jta" />
+        <param key="debug" value="true" />
+        <param key="reportFile" value="${build.reports}/TEST-org.jboss.test.jbossts.ASCrashRecovery01.WipeOutTxsInDoubt-${dbname}.xml" />
+      </astest:action>
+      <astest:server method="stop" serverName="crashrecovery-jta" >
+        <undeploy from="deploy/${datasource}" />
+        <undeploy from="lib/${dbdriver}" />    	
+        <undeploy from="deploy/${astest.app.jar.name}" />
+      </astest:server>
+  </target>
+
+	
+	<!-- =====  get db drivers - borrowed from  https://svn.jboss.org/repos/labs/labs/jbosstm/trunk/qa/build.xml  ==== -->
+    <!-- set these to the location(s) of the database drivers -->
+	
+    <property name="driver.url" value="http://www.qa.jboss.com/jdbc-drivers-products/EAP/5.1.0"/>
+    <property name="driver.name.psql_8.2" value="postgresql-8.2.jar"/>
+    <property name="driver.name.psql_8.3" value="postgresql-8.3.jar"/>
+    <property name="driver.name.psql_8.4" value="postgresql-8.4.jar"/>
+    <property name="driver.name.psql_9.0" value="postgresql-9.0.jar"/>
+    <property name="driver.name.sybase_15" value="jconn4.jar"/>
+    <property name="driver.name.oracle_10" value="ojdbc14.jar"/>
+    <property name="driver.name.oracle_11" value="ojdbc6.jar"/>
+    <property name="driver.name.oracle_11_rac" value="ojdbc6_rac.jar"/>
+    <property name="driver.name.db2_9.7" value="db2jcc.jar"/>
+    <property name="driver.name.mysql_5.0" value="mysql-connector-java-5.0.jar"/>
+    <property name="driver.name.mysql_5.1" value="mysql-connector-java-5.1.jar"/>
+    <property name="driver.name.mssql_2005" value="sqljdbc4_2005.jar"/>
+    <property name="driver.name.mssql_2008" value="sqljdbc4_2008.jar"/>
+	
+    <target name="prepare-drivers">
+       <available file="${driver.home}/${driver.name.psql_8.2}" property="have.dbdriver.psql_8.2" value="true"/>      
+       <available file="${driver.home}/${driver.name.psql_8.3}" property="have.dbdriver.psql_8.3" value="true"/>      
+       <available file="${driver.home}/${driver.name.psql_8.4}" property="have.dbdriver.psql_8.4" value="true"/>      
+       <available file="${driver.home}/${driver.name.psql_9.0}" property="have.dbdriver.psql_9.0" value="true"/>      
+       <available file="${driver.home}/${driver.name.sybase_15}" property="have.dbdriver.sybase_15" value="true"/>
+       <available file="${driver.home}/${driver.name.oracle_10}" property="have.dbdriver.oracle_10" value="true"/>   	
+       <available file="${driver.home}/${driver.name.oracle_11}" property="have.dbdriver.oracle_11" value="true"/>      
+       <available file="${driver.home}/${driver.name.oracle_11_rac}" property="have.dbdriver.oracle_11_rac" value="true"/>      
+       <available file="${driver.home}/${driver.name.db2_9.7}" property="have.dbdriver.db2_9.7" value="true"/>      
+       <available file="${driver.home}/${driver.name.mysql_5.0}" property="have.dbdriver.mysql_5.0" value="true"/>      
+       <available file="${driver.home}/${driver.name.mysql_5.1}" property="have.dbdriver.mysql_5.1" value="true"/>      
+       <available file="${driver.home}/${driver.name.mssql_2005}" property="have.dbdriver.mssql_2005" value="true"/>      
+       <available file="${driver.home}/${driver.name.mssql_2008}" property="have.dbdriver.mssql_2008" value="true"/>
+       <condition property="want.dbdriver.sybase_15">
+          <or>
+             <istrue value="${want.sybase_15}"/>
+             <istrue value="${want.sybase_15.5}"/>
+          </or>
+       </condition>
+       <condition property="want.dbdriver.oracle_11">
+          <or>
+             <istrue value="${want.oracle_11}"/>
+             <istrue value="${want.oracle_11_r2}"/>
+          </or>
+       </condition>
+        <condition property="want.dbdriver.oracle_11_rac">
+           <or>
+              <istrue value="${want.oracle_rac}"/>
+              <istrue value="${want.oracle_rac_lb}"/>
+              <istrue value="${want.oracle_rac_r2}"/>
+              <istrue value="${want.oracle_rac_r2_lb}"/>
+           </or>
+        </condition>
+       
+       <mkdir dir="${driver.home}" />
+       <antcall target="get.drivers" />
+    </target>
+
+    <target name="get.drivers" 
+    	depends="get.driver.oracle_10, 
+                 get.driver.oracle_11,
+                 get.driver.oracle_11_rac,
+                 get.driver.mssql_2005,
+                 get.driver.mssql_2008,
+                 get.driver.psql_9.0,
+                 get.driver.psql_8.4,
+                 get.driver.psql_8.3,
+                 get.driver.psql_8.2,
+                 get.driver.mysql_5.1,
+                 get.driver.mysql_5.0,
+                 get.driver.db2_9.7,
+                 get.driver.sybase_15" />
+    	
+    <target name="get.driver.oracle_10" unless="have.dbdriver.oracle_10" if="want.oracle_10">
+        <get src="${driver.url}/oracle10g/jdbc4/ojdbc14.jar"
+             dest="${driver.home}/${driver.name.oracle_10}"/>
+    </target>
+    <target name="get.driver.oracle_11" unless="have.dbdriver.oracle_11" if="want.dbdriver.oracle_11">
+        <get src="${driver.url}/oracle11gR1/jdbc4/ojdbc6.jar"
+             dest="${driver.home}/${driver.name.oracle_11}"/>
+    </target>
+    <target name="get.driver.oracle_11_rac" unless="have.dbdriver.oracle_11_rac" if="want.dbdriver.oracle_11_rac">
+        <get src="${driver.url}/oracle11gR1RAC/jdbc4/ojdbc6.jar"
+             dest="${driver.home}/${driver.name.oracle_11_rac}"/>
+    </target>
+    <target name="get.driver.mssql_2005" unless="have.dbdriver.mssql_2005" if="want.mssql_2005">
+        <get src="${driver.url}/mssql2005/jdbc4/sqljdbc4.jar"
+             dest="${driver.home}/${driver.name.mssql_2005}"/>
+    </target>
+    <target name="get.driver.mssql_2008" unless="have.dbdriver.mssql_2008" if="want.mssql_2008">
+        <get src="${driver.url}/mssql2008/jdbc4/sqljdbc4.jar"
+             dest="${driver.home}/${driver.name.mssql_2008}"/>
+    </target>
+    <target name="get.driver.psql_8.4" unless="have.dbdriver.psql_8.4" if="want.psql_8.4">
+        <get src="${driver.url}/postgresql84/jdbc4/postgresql-8.4-702.jdbc4.jar"
+             dest="${driver.home}/${driver.name.psql_8.4}"/>
+    </target>
+    <target name="get.driver.psql_9.0" unless="have.dbdriver.psql_9.0" if="want.psql_9.0">
+        <get src="${driver.url}/postgresql83/jdbc4/postgresql-8.3-605.jdbc4.jar"
+             dest="${driver.home}/${driver.name.psql_9.0}"/>
+    </target>
+    <target name="get.driver.psql_8.3" unless="have.dbdriver.psql_8.3" if="want.psql_8.3">
+        <get src="${driver.url}/postgresql83/jdbc4/postgresql-8.3-605.jdbc4.jar"
+             dest="${driver.home}/${driver.name.psql_8.3}"/>
+    </target>
+    <target name="get.driver.psql_8.2" unless="have.dbdriver.psql_8.2" if="want.psql_8.2">
+        <get src="${driver.url}/postgresql82/jdbc4/postgresql-8.2-510.jdbc4.jar"
+             dest="${driver.home}/${driver.name.psql_8.2}"/>
+    </target>
+    <target name="get.driver.mysql_5.1" unless="have.dbdriver.mysql_5.1" if="want.mysql_5.1">
+        <get src="${driver.url}/mysql51/jdbc4/mysql-connector-java-5.1.13-bin.jar"
+             dest="${driver.home}/${driver.name.mysql_5.1}"/>
+    </target>
+    <target name="get.driver.mysql_5.0" unless="have.dbdriver.mysql_5.0" if="want.mysql_5.0">
+        <get src="${driver.url}/mysql50/jdbc4/mysql-connector-java-5.0.8-bin.jar"
+             dest="${driver.home}/${driver.name.mysql_5.0}"/>
+    </target>
+    <target name="get.driver.db2_9.7" unless="have.dbdriver.db2_9.7" if="want.db2_9.7">
+        <get src="${driver.url}/db2-97/jdbc4/db2jcc4.jar"
+             dest="${driver.home}/${driver.name.db2_9.7}"/>
+    </target>
+    <target name="get.driver.sybase_15" unless="have.dbdriver.sybase_15" if="want.dbdriver.sybase_15">
+        <get src="${driver.url}/sybase15/jdbc4/jconn4-26502.jar"
+             dest="${driver.home}/${driver.name.sybase_15}"/>
+    </target>
+
+  <!-- ===========   JTS Propagation Test  ==========  -->	
+  
+  <target name="init-propagation-tests">
+    <property name="wipeOutTxsInDoubt" value="true" />
+    <echo message="jboss.home=${jboss.home}"/>
+  </target>
+
+  <target name="want-all-ejbX">
+    <property name="want.ejb2" value="true" />
+    <property name="want.ejb3" value="true" />
+  </target>
+  
+  <target name="set-ejbX">
+    <condition property="want.ejb2">
+       <equals arg1="${jbossts.ejbX}" arg2="ejb2"/>
+    </condition>
+    <condition property="want.ejb3">
+       <equals arg1="${jbossts.ejbX}" arg2="ejb3"/>
+    </condition>
+  </target>
+	
+  <target name="want-all-transports">
+    <property name="want.jrmp" value="true" />
+    <property name="want.iiop" value="true" />
+  </target>
+	
+  <target name="set-transport">
+    <condition property="want.jrmp">
+       <equals arg1="${jbossts.transport}" arg2="jrmp"/>
+    </condition>
+    <condition property="want.iiop">
+       <equals arg1="${jbossts.transport}" arg2="iiop"/>
+    </condition>
+  </target>
+	
+  <target name="propag-tests-select-db">
+    <antcall target="call-tests-for-all-dbs"><param name="call.target" value="propag-tests-main"/></antcall>
+  </target>
+
+  <target name="propag-tests-main"
+      depends="hack-before-astest-run,
+               start-servers-for-jts-propagation-tests,
+               propag-tests-ejb3, 
+               propag-tests-ejb2,
+               stop-servers-for-jts-propagation-tests,
+               hack-after-astest-run" />
+	    
+  <target name="propag-tests-ejb2" if="want.ejb2">
+    <antcall target="propag-tests-transport"><param name="ejb3" value="false" /></antcall>
+  </target>
+	        
+  <target name="propag-tests-ejb3" if="want.ejb3">
+    <antcall target="propag-tests-transport"><param name="ejb3" value="true" /><param name="ejb3.run" value="true" /></antcall>
+  </target>
+
+  <target name="propag-tests-transport" depends="propag-tests-jrmp, propag-tests-iiop" />
+	        
+  <target name="propag-tests-jrmp" if="want.jrmp">
+    <antcall target="jts-propagation-tests-batch"><param name="ots" value="false" /></antcall>
+  </target>
+	            
+  <target name="propag-tests-iiop" if="want.iiop" unless="ejb3.run">
+    <antcall target="jts-propagation-tests-batch"><param name="ots" value="true" /></antcall>
+  </target>
+	
+  <target name="jts-propagation-tests-batch">
+  	
+      <condition property="test.name.ejbX" value="ejb3" else="ejb2">
+        <istrue value="${ejb3}"/>
+      </condition>
+      <condition property="test.name.transport" value="iiop" else="jrmp">
+        <istrue value="${ots}"/>
+      </condition>
+      <property name="testname.prefix.noClientTx" value="${test.name.ejbX}-${test.name.transport}"/>
+      <property name="testname.prefix.clientTx" value="clientTx-${testname.prefix.noClientTx}"/>
+
+      <!-- batch of jts propagation test scenarios -->
+      <!-- server initiated transactions -->
+      <run-jts-propagation-test specs0="none" specs1="none" rollbackExpected="false" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="pre_prepare_rollbackonly" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="pre_prepare_rollbackonly" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="pre_prepare_ejbexception" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="pre_prepare_ejbexception" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="synch_before_rollbackonly" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="synch_before_rollbackonly" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="prepare_ex_rollback" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="prepare_ex_rollback" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="pre_prepare_suspend" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="pre_prepare_suspend" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+    
+      <!-- client initiated transactions -->
+      <run-jts-propagation-test specs0="none" specs1="none" rollbackExpected="false" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="pre_prepare_rollbackonly" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="pre_prepare_rollbackonly" specs1="none" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="synch_before_rollbackonly" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="synch_before_rollbackonly" specs1="none" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="prepare_ex_rollback" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="prepare_ex_rollback" specs1="none" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="pre_prepare_suspend" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+      <run-jts-propagation-test specs0="pre_prepare_suspend" specs1="none" rollbackExpected="true" clientTx="true" testNamePref="${testname.prefix.clientTx}" />
+  	  
+  	  <!-- tests integrated with crash recovery -->
+      <run-jts-propagation-test specs0="none" specs1="prepare_ex" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="prepare_ex" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="prepare_halt" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="prepare_halt" specs1="none" rollbackExpected="true" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="none" specs1="commit_halt" rollbackExpected="false" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+      <run-jts-propagation-test specs0="commit_halt" specs1="none" rollbackExpected="false" clientTx="false" testNamePref="${testname.prefix.noClientTx}" />
+  </target>
+
+  <target name="start-servers-for-jts-propagation-tests" unless="dont.start.server.for.astests">
+  	
+    <condition property="astest.app.jar.name" value="${astest.alternative.jar.name}">
+      <isset property="astest.alternative.jar.name"/>
+    </condition>
+    <property name="astest.app.jar.name" value="${astest.jar.name}" />
+  	
+    <deploy-datasource-and-set-credentials from="${product.dir}/resources/${datasource}" to="${jboss.home}/server/jts-propagation-node0/deploy/${datasource}" />
+    <astest:server method="start" serverName="jts-propagation-node0" >
+      <deploy from="dbdrivers/${dbdriver}" to="lib/${dbdriver}" />
+      <deploy from="${astest.jar.deploy.dir}/${astest.app.jar.name}" to="deploy/${astest.jar.name}" />
+      <deploy from="${astest.jar.deploy.dir}/${astest.ejb2.jar.name}" to="deploy/${astest.ejb2.jar.name}" />
+    </astest:server>
+    <deploy-datasource-and-set-credentials from="${product.dir}/resources/${datasource}" to="${jboss.home}/server/jts-propagation-node1/deploy/${datasource}" />
+    <astest:server method="start" serverName="jts-propagation-node1" >
+      <deploy from="dbdrivers/${dbdriver}" to="lib/${dbdriver}" />
+      <deploy from="${astest.jar.deploy.dir}/${astest.app.jar.name}" to="deploy/${astest.jar.name}" />
+      <deploy from="${astest.jar.deploy.dir}/${astest.ejb2.jar.name}" to="deploy/${astest.ejb2.jar.name}" />
+    </astest:server>
+  </target>
+  
+  <target name="stop-servers-for-jts-propagation-tests" unless="dont.start.server.for.astests">
+    <astest:server method="stop" serverName="jts-propagation-node1">
+      <undeploy from="deploy/${astest.ejb2.jar.name}" />
+      <undeploy from="deploy/${astest.jar.name}" />
+      <undeploy from="deploy/${datasource}" />
+      <undeploy from="lib/${dbdriver}" />     
+    </astest:server>
+    <astest:server method="stop" serverName="jts-propagation-node0">
+      <undeploy from="deploy/${astest.ejb2.jar.name}" />
+      <undeploy from="deploy/${astest.jar.name}" />
+      <undeploy from="deploy/${datasource}" />
+      <undeploy from="lib/${dbdriver}" />     
+    </astest:server>
+  </target>
+
+  <macrodef name="run-jts-propagation-test">
+    <attribute name="specs0"/>
+    <attribute name="specs1"/>
+    <attribute name="rollbackExpected"/>
+    <attribute name="clientTx"/>
+    <attribute name="testNamePref"/>
+    <sequential>
+    
+    <astest:action abortOnFail="false" waitFor="10000" impl="org.jboss.test.jbossts.taskdefs.JUnitClientAction">
+      <param key="testClass" value="org.jboss.test.jbossts.JTSContextPropagation01.TestContextPropagation" />
+      <param key="name" value="@{testNamePref}-@{specs0}-@{specs1}" />
+      <param key="specs0" value="@{specs0}" />
+      <param key="specs1" value="@{specs1}" />
+      <param key="ots" value="${ots}" />
+      <param key="ejb3" value="${ejb3}" />
+      <param key="serverName0" value="jts-propagation-node0" />
+      <param key="serverName1" value="jts-propagation-node1" />
+      <param key="host0" value="${node0}" />
+      <param key="host1" value="${node1}" />    
+      <param key="clientTx" value="@{clientTx}" />
+      <param key="rollbackExpected" value="@{rollbackExpected}" />
+      <param key="wipeOutTxsInDoubtBeforeTest" value="${wipeOutTxsInDoubtBeforeTest}" />
+      <param key="wipeOutTxsInDoubt" value="${wipeOutTxsInDoubt}" />
+      <param key="debug" value="true" />
+      <param key="reportFile" value="${build.reports}/TEST-org.jboss.test.jbossts.JTSContextPropagation01.TestContextPropagation-@{testNamePref}-@{specs0}-@{specs1}.xml" />
+      <param key="testTime" value="${testTime}" />
+    </astest:action>
+    </sequential>
+  </macrodef>
+	
+</project>

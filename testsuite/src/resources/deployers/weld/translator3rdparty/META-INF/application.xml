@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<application xmlns="http://java.sun.com/xml/ns/javaee" 
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/application_5.xsd"
+             version="5">
+
+  <display-name>weld-translator3rdparty-ear</display-name>
+  <module>
+    <web>
+      <web-uri>weld-translator.war</web-uri>
+      <context-root>/weld-translator3rdpartylib</context-root>
+    </web>
+  </module>
+  <module>
+    <ejb>weld-translator-3rdpartylib.jar</ejb>
+  </module>
+</application>

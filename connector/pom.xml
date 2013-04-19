@@ -1,0 +1,316 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-connector</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Connector</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (connector module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <!-- Exclude all test sources until they are fixed. -->
+          <testExcludes>
+            <testExclude>**/*</testExclude>
+          </testExcludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+        <configuration>
+          <descriptors>
+            <descriptor>src/assembly/jboss-common-jdbc-wrapper.xml</descriptor>
+            <descriptor>src/assembly/jbosscx-client.xml</descriptor>
+            <descriptor>src/assembly/jboss-jca.xml</descriptor>
+            <descriptor>src/assembly/jboss-jca-deployer.xml</descriptor>
+            <descriptor>src/assembly/jboss-local-jdbc.xml</descriptor>
+            <descriptor>src/assembly/jboss-local-jdbc-rar.xml</descriptor>
+            <descriptor>src/assembly/jboss-xa-jdbc.xml</descriptor>
+            <descriptor>src/assembly/jboss-xa-jdbc-rar.xml</descriptor>
+            <descriptor>src/assembly/jms-ra.xml</descriptor>
+            <descriptor>src/assembly/jms-ra-rar.xml</descriptor>
+            <descriptor>src/assembly/mail-ra.xml</descriptor>
+            <descriptor>src/assembly/mail-ra-rar.xml</descriptor>
+            <descriptor>src/assembly/quartz-ra.xml</descriptor>
+            <descriptor>src/assembly/quartz-ra-rar.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                                
+                <filter token="/" value="${file.separator}"/>
+                
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                
+                <mkdir dir="target/resources"/>
+                <copy todir="target/resources" filtering="yes">
+                  <fileset dir="src/resources">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+                                
+                <copy file="target/${project.build.finalName}-jboss-local-jdbc-rar.jar"
+                      tofile="target/jboss-local-jdbc.rar"/>
+                <copy file="target/${project.build.finalName}-jboss-xa-jdbc-rar.jar"
+                      tofile="target/jboss-xa-jdbc.rar"/>
+                <copy file="target/${project.build.finalName}-jms-ra-rar.jar"
+                      tofile="target/jms-ra.rar"/>
+                <copy file="target/${project.build.finalName}-mail-ra-rar.jar"
+                      tofile="target/mail-ra.rar"/>
+                <copy file="target/${project.build.finalName}-quartz-ra-rar.jar"
+                      tofile="target/quartz-ra.rar"/>
+                
+                <copy file="target/${project.build.finalName}-jboss-jca-deployer.jar" 
+                      tofile="target/jboss-jca.deployer/jboss-jca-deployer.jar"/>
+                <copy file="target/resources/deployers/jca-deployers-jboss-beans.xml" todir="target/jboss-jca.deployer/META-INF"/>
+                
+                
+             </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jboss</groupId>
+      <artifactId>jboss-serialization</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-mdr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-reflect</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-vfs</artifactId>
+       <exclusions>
+         <exclusion>
+           <groupId>org.jboss.logging</groupId>
+           <artifactId>jboss-logging-spi</artifactId>
+         </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.cl</groupId>
+      <artifactId>jboss-classloading</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-client-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-core-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-structure-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-vfs-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-integration</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.ejb</groupId>
+      <artifactId>jboss-ejb-api_3.1_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.resource</groupId>
+      <artifactId>jboss-connector-api_1.5_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_1.1_spec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.man</groupId>
+      <artifactId>jboss-managed</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.man</groupId>
+      <artifactId>jboss-metatype</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-common</artifactId>
+      <exclusions>
+         <exclusion>
+            <groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-ejb-api</artifactId>
+         </exclusion>
+         <exclusion>
+            <groupId>org.jboss.javaee</groupId>
+            <artifactId>jboss-jms-api</artifactId>
+         </exclusion>
+     </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.metadata</groupId>
+      <artifactId>jboss-metadata-rar</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.kernel</groupId>
+      <artifactId>jboss-aop-mc-int</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jboss-security-spi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.stdio</groupId>
+      <artifactId>jboss-stdio</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.threads</groupId>
+      <artifactId>jboss-threads</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.quartz-scheduler</groupId>
+      <artifactId>quartz</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.bind</groupId>
+      <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
+    </dependency>
+  </dependencies>
+  
+  <profiles>
+    <profile>
+      <id>jdk6</id>
+      <activation>
+        <jdk>1.6</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>1.6</source>
+              <target>1.6</target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    <!-- Maven 2.0.x does not allow version ranges for <jdk> for activating profiles. 
+	    Maven 2.1 does http://maven.apache.org/guides/introduction/introduction-to-profiles.html
+	    So for Maven 2.0.x we create another profile which will do the same
+	    as the jdk6 profile, except that it will be activated for JDK 1.7 version -->
+    <profile>
+      <id>jdk7</id>
+      <activation>
+        <jdk>1.7</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>1.7</source>
+              <target>1.7</target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	    
+  </profiles>
+  
+</project>

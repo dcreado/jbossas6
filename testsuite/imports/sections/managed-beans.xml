@@ -1,0 +1,24 @@
+<project name="tests-managed-bean-jars">
+    <!--
+        when adding new targets, do not forget to add it to
+        _jars-managed-beans (see bottom)
+    -->
+
+
+    <target name="simple" depends="compile">
+        <mkdir dir="${build.lib}" />
+
+        <jar destfile="${build.lib}/javaee6-managed-bean.jar">
+            <fileset dir="${build.classes}">
+                <include name="org/jboss/test/managed/bean/**" />
+            </fileset>
+        </jar>
+    </target>
+
+
+    <!--  The main target which will called through the AS testsuite build -->
+    <target name="_jars-managed-beans" depends="simple">
+
+    </target>
+
+</project>

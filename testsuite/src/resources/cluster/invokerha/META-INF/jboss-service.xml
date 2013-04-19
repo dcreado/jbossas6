@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<server>
+  
+  <!-- Unified version.  
+       TODO We shouldn't need a separate service to expose a different
+       proxy. We do because of ProxyFactoryHA bases the FamilyClusterInfo name
+       on the service name. -->
+       
+   <mbean code="org.jboss.proxy.generic.ProxyFactoryHA"
+      name="jboss.test:service=ProxyFactory,name=HAService,protocol=unifiedha">
+
+      <attribute name="Partition"><inject bean="HAPartition"/></attribute>
+
+      <depends>jboss:service=invoker,type=unifiedha</depends>
+      <attribute name="InvokerName">jboss:service=invoker,type=unifiedha</attribute>
+
+      <attribute name="LoadBalancePolicy">org.jboss.ha.framework.interfaces.RoundRobin</attribute>
+
+      <depends optional-attribute-name="TargetName">jboss.test:service=HAService,type=unifiedha</depends>
+      
+      <!--  Directly invoke the target method, not invoke() -->
+      <attribute name="InvokeTargetMethod">true</attribute>
+
+      <attribute name="JndiName">jmx/HAServiceUnified</attribute>
+
+      <attribute name="ExportedInterface">org.jboss.test.cluster.invokerha.HAServiceRemote</attribute>
+
+      <attribute name="ClientInterceptors">
+          <interceptors>
+             <interceptor>org.jboss.proxy.ClientMethodInterceptor</interceptor>
+             <interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>
+          </interceptors>
+      </attribute>
+   </mbean>
+  
+  <mbean code="org.jboss.test.cluster.invokerha.HAService" 
+         name="jboss.test:service=HAService,type=unifiedha">         
+         
+      <attribute name="SendRemoteLifecycleNotifications">false</attribute>  
+      <attribute name="HAPartition"><inject bean="HAPartition"/></attribute>
+      <attribute name="ServiceHAName">jboss.test:service=HAService,type=unifiedha</attribute>
+      
+  </mbean>
+  
+  <!-- Pooled version.  
+       TODO We shouldn't need a separate service to expose a different
+       proxy. We do because of ProxyFactoryHA bases the FamilyClusterInfo name
+       on the service name. -->
+       
+   <mbean code="org.jboss.proxy.generic.ProxyFactoryHA"
+      name="jboss.test:service=ProxyFactory,name=HAService,protocol=httpha">
+
+      <attribute name="Partition"><inject bean="HAPartition"/></attribute>
+
+      <depends>jboss:service=invoker,type=httpHA</depends>
+      <attribute name="InvokerName">jboss:service=invoker,type=httpHA</attribute>
+
+      <attribute name="LoadBalancePolicy">org.jboss.ha.framework.interfaces.RoundRobin</attribute>
+
+      <depends optional-attribute-name="TargetName">jboss.test:service=HAService,type=httpha</depends>
+      
+      <!--  Directly invoke the target method, not invoke() -->
+      <attribute name="InvokeTargetMethod">true</attribute>
+
+      <attribute name="JndiName">jmx/HAServiceHttp</attribute>
+
+      <attribute name="ExportedInterface">org.jboss.test.cluster.invokerha.HAServiceRemote</attribute>
+
+      <attribute name="ClientInterceptors">
+          <interceptors>
+             <interceptor>org.jboss.proxy.ClientMethodInterceptor</interceptor>
+             <interceptor>org.jboss.invocation.InvokerInterceptor</interceptor>
+          </interceptors>
+      </attribute>
+   </mbean>
+  
+  <mbean code="org.jboss.test.cluster.invokerha.HAService" 
+         name="jboss.test:service=HAService,type=httpha">         
+         
+      <attribute name="SendRemoteLifecycleNotifications">false</attribute>  
+      <attribute name="HAPartition"><inject bean="HAPartition"/></attribute>
+      <attribute name="ServiceHAName">jboss.test:service=HAService,type=httpha</attribute>
+      
+  </mbean>
+   
+</server>

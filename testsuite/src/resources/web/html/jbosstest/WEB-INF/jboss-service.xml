@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mbean code="org.jboss.naming.JNDIBindingServiceMgr" name="jboss.apps:name=myapp">
+    <attribute name="BindingsConfig" serialDataType="jbxb">
+        <jndi:bindings xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:jndi="urn:jboss:jndi-binding-service:1.0"
+            xs:schemaLocation="urn:jboss:jndi-binding-service resource:jndi-binding-service_1_0.xsd">
+            <!--  bind to java:SomeWebSite jndi name which is referenced in jboss-web.xml
+            via a resource-ref entry -->
+            <jndi:binding name="java:SomeWebSite">
+                <jndi:value type="java.net.URL">http://www.jboss.org</jndi:value>
+            </jndi:binding>
+
+        </jndi:bindings>
+    </attribute>
+</mbean>    

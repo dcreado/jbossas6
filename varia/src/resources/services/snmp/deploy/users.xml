@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!-- 
+  This file is used to configure the SNMP users for v3 of the protocol
+  
+  Each entry must specify:
+    - the security name of the user (typically the user name).
+    - the authentication Protocol : the authentication protcol to be associated with this user (MD5 or SHA). If not set, this user only supports unauthenticated messages.
+    - the authentication Passphrase : If present, the authentication Protocol must also be present. RFC3414 §11.2 requires passphrases to have a minimum length of 8 bytes. 
+    If the length of <code>authenticationPassphrase</code> is less than 8 bytes an IllegalArgumentException will be thrown.
+    - the privacy Protocol : the privacy protcol ID to be associated with this user (DES, 3DES, AES128, AES192, AES256). If not set, this user only supports unencrypted messages.
+    - the privacy Passphrase : If present, the privacy Protocol must also be set. RFC3414 §11.2 requires passphrases to have a minimum length of 8 bytes.
+    If the length of <code>authenticationPassphrase</code> is less than 8 bytes an IllegalArgumentException will be thrown.
+    
+  More than one user may be specified.
+-->
+<user-list>
+  <!--
+    A default user.
+  -->
+  <user>
+    <securityName>TEST</securityName>
+    <authenticationProtocol>MD5</authenticationProtocol>
+    <authenticationPassphrase>maplesyrup</authenticationPassphrase>
+    <privacyProtocol>DES</privacyProtocol>
+    <privacyPassphrase>maplesyrup</privacyPassphrase>
+  </user>
+  <user>
+    <securityName>myuser</securityName>
+    <authenticationProtocol>MD5</authenticationProtocol>
+    <authenticationPassphrase>password</authenticationPassphrase>
+    <privacyProtocol>DES</privacyProtocol>
+    <privacyPassphrase>password</privacyPassphrase>
+  </user>
+</user-list>

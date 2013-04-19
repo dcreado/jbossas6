@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <!-- Parent -->
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+
+  <!-- Model Version -->
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Artifact Configuration -->
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-embedded</artifactId>
+  <version>6.1.1-SNAPSHOT</version>
+  <name>JBoss Application Server EmbeddedAS TestSuite</name>
+  <description>JBoss Application Server Embedded TestSuite</description>
+
+  <!-- Properties -->
+  <properties>
+
+    <!-- JBOSS_HOME (We'll unpack into here -->
+    <version.org.jboss.jbossas>6.1.1-SNAPSHOT</version.org.jboss.jbossas>
+    <JBOSS_HOME>${basedir}/../build/target/jboss-${version.org.jboss.jbossas}</JBOSS_HOME>
+
+    <!-- Versioning -->
+    <version.org.apache.httpcomponents_httpclient>4.0-beta2</version.org.apache.httpcomponents_httpclient>
+    <version.junit_junit>4.7</version.junit_junit>
+
+  </properties>
+
+  <!-- Build Configuration -->
+  <build>
+
+
+    <plugins>
+    
+      <!-- Compiler -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <inherited>true</inherited>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <showDeprecation>false</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <optimize>true</optimize>
+          <compilerVersion>1.6</compilerVersion>
+          <fork>true</fork>
+          <argLine>-Xmx512M</argLine>
+          <executable>${JAVA_HOME}/bin/javac</executable>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <additionalClasspathElements>
+            <additionalClasspathElement>${JBOSS_HOME}/client/jbossws-native-client.jar</additionalClasspathElement>
+            <!--
+              Because jbossweb.sar contains shared web.xml,
+              which must be visible from same CL as
+              TomcatDeployer.class.getClassLoader
+            -->
+            <additionalClasspathElement>${JBOSS_HOME}/server/default/deploy/jbossweb.sar</additionalClasspathElement>
+          </additionalClasspathElements>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          <trimStackTrace>false</trimStackTrace>
+          <printSummary>true</printSummary>
+          <includes>
+            <include>**/*IntegrationTest.java</include>
+          </includes>
+          <forkMode>always</forkMode>
+          <!--
+            MaxPermSize Required to bump the space for relective
+            data like classes, methods, etc. EMB-41. Endorsed
+            required for things like WS support (EMB-61)
+          -->
+          <argLine>-Xmx512m -XX:MaxPermSize=256m -Djava.net.preferIPv4Stack=true -Djava.util.logging.manager=org.jboss.logmanager.LogManager -Djava.endorsed.dirs=${JBOSS_HOME}/lib/endorsed -Djboss.home=${JBOSS_HOME} -Djboss.boot.server.log.dir=${JBOSS_HOME} -Dorg.jboss.reflect.spi.TypeInfoFactory=org.jboss.reflect.plugins.introspection.IntrospectionTypeInfoFactory</argLine>
+        </configuration>
+      </plugin>
+
+    </plugins>
+
+  </build>
+
+  <!-- Dependencies -->
+  <dependencies>
+
+    <!-- All AS runtime dependencies --> 
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-depchain</artifactId>
+      <version>${version.org.jboss.jbossas}</version>
+      <scope>test</scope>
+      <type>pom</type>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.jbossas.osgi</groupId>
+          <artifactId>jboss-as-osgi-distribution</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- $JBOSS_HOME fully built, but not yet installed -->
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-build</artifactId>
+      <version>${version.org.jboss.jbossas}</version>
+      <scope>test</scope>
+      <type>pom</type>
+    </dependency>
+    
+    <!-- JUnit -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${version.junit_junit}</version>
+    </dependency>
+
+    <!--
+      Dependencies below this line are for APIs used in the tests
+      themselves
+    -->
+
+    <!-- Apache HttpClient -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${version.org.apache.httpcomponents_httpclient}</version>
+      <scope>test</scope>
+    </dependency>
+    
+  </dependencies>
+
+  <!-- We need to inherit the exclusions as well, so this is required for consumers without a parent of jboss-as-parent
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.jbossas</groupId>
+        <artifactId>jboss-as-depchain</artifactId>
+        <version>${version.org.jboss.jbossas}</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement> -->
+
+</project>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+   
+    <!-- Don't inject the real AS thread pool, as it has a classloader
+         leak and we don't want to leak this classloader to it
+    -->
+    <threads xmlns="urn:jboss:threads:2.0">
+       <thread-group name="RestartNamingThreadGroup" group-name="RestartNamingThreadGroup"/>
+       <thread-factory name="RestartNamingThreadFactory">
+          <thread-group name="RestartNamingThreadGroup"/>
+       </thread-factory>
+
+      <queueless-thread-pool-executor name="RestartNamingThreadPool" blocking="true">
+         <max-threads count="200" per-cpu="500"/>
+         <thread-factory name="RestartNamingThreadFactory"/>
+         <task-filter>
+            <clear-context-classloader/>
+            <clear-tls/>
+         </task-filter>
+      </queueless-thread-pool-executor>
+    </threads>
+   
+   <bean name="RestartLocalNamingBean" class="org.jnp.server.NamingBeanImpl">
+   
+      <!-- IMPORTANT Ensure we use our own NamingServer and don't screw up the
+           static ref to the std one in the server-side NamingContext class -->
+      <property name="useGlobalService">false</property>      
+      <property name="installGlobalService">false</property>
+      <!-- do not overwrite java:comp on restart (see JBNAME-37) -->
+      <property name="installJavaComp">false</property>
+      
+   </bean>
+
+    <bean name="RestartRemoteNamingBean" class="org.jnp.server.Main">
+        
+        <property name="namingInfo"><inject bean="RestartLocalNamingBean"/></property>
+        
+        <!-- The call by value mode. true if all lookups are unmarshalled using
+            the caller's TCL, false if in VM lookups return the value by reference. -->
+        <property name="callByValue">false</property>
+        
+        <!-- The listening port for the bootstrap JNP service. Set this to -1
+            to run the NamingService without the JNP invoker listening port. -->
+        <property name="port">19099</property>
+        
+        <!-- The bootstrap JNP server bind address. This also sets the default
+            RMI service bind address. Empty == all addresses -->
+        <property name="bindAddress">${jboss.bind.address:localhost}</property>
+        
+        <!-- The port of the RMI naming service, 0 == anonymous -->
+        <property name="rmiPort">0</property>
+        
+        <!-- The RMI service bind address. Empty == all addresses  -->
+        <property name="rmiBindAddress">${jboss.bind.address:localhost}</property>
+        
+        <!-- Set the java.rmi.server.hostname system property to rmiBindAddress -->
+        <property name="enableRmiServerHostname">true</property>
+        
+        <!-- The thread pool service used to control the bootstrap lookups -->
+        <property name="lookupExector"><inject bean="RestartNamingThreadPool"/></property>
+    </bean>
+
+    <bean name="RestartNamingService" class="org.jboss.naming.NamingService">   
+        <property name="namingInfo"><inject bean="RestartRemoteNamingBean"/></property>
+        <!-- Do not start the injected naming bean -->
+        <property name="startNamingBean">false</property>
+   </bean>
+   
+   <!-- Our own HA-JNDI that we can redeploy.  Subclasses std HA-JNDI service
+        to ensure we don't pollute static ref to the std HA-JNDI in the 
+        server-side NamingContext class -->
+   <bean name="RestartHAJNDI" class="org.jboss.test.naming.restart.RestartHANamingService">
+   	
+   	<depends>HAPartition</depends>
+
+      <property name="HAPartition"><inject bean="HAPartition"/></property>
+      
+     <!-- Handler for the replicated tree -->
+      <property name="distributedTreeManager">
+         <bean class="org.jboss.ha.jndi.ispn.DistributedTreeManager">
+            <constructor>
+              <parameter><inject bean="CacheContainerRegistry"/></parameter>
+            </constructor>
+            <property name="cacheContainerName">ha-partition</property>
+            <property name="cacheName">test-distributed-tree</property>
+         </bean>
+      </property>
+      
+      <property name="localNamingInstance"><inject bean="RestartLocalNamingBean" property="namingInstance"/></property>
+      
+      <!-- Bind address of bootstrap endpoint -->
+      <property name="bindAddress">${jboss.bind.address}</property>
+      <!-- Port on which the HA-JNDI stub is made available -->
+      <property name="port">19100</property>
+      <!-- Bind address of the HA-JNDI RMI endpoint -->
+      <property name="rmiBindAddress">${jboss.bind.address}</property>
+      <!-- RmiPort to be used by the HA-JNDI service once bound. 0 => auto. -->
+      <property name="rmiPort">0</property>
+      <!-- Accept backlog of the bootstrap socket -->
+      <property name="backlog">50</property>
+      <property name="lookupPool"><inject bean="RestartNamingThreadPool"/></property>
+      
+      <property name="discoveryDisabled">false</property>
+      <property name="autoDiscoveryBindAddress">${jboss.bind.address}</property>
+      <!-- We use a custom Multicast Address and port for auto-discovery (JBAS-8540) -->
+      <property name="autoDiscoveryAddress">${naming.autodiscovery.mcast_addr}</property>
+      <property name="autoDiscoveryGroup">19102</property>
+      <property name="autoDiscoveryTTL">1</property>
+
+      <!-- The load balancing policy for HA-JNDI -->
+      <property name="loadBalancePolicy">org.jboss.ha.framework.interfaces.RoundRobin</property>
+      
+   </bean>
+   
+   <!-- Binds an object in the above two naming services for remote lookup
+        by the test client -->
+   <bean name="RestartObjectBinder" class="org.jboss.test.naming.restart.ObjectBinder">
+      <property name="naming"><inject bean="RestartLocalNamingBean" property="namingInstance"/></property>      
+   </bean>
+
+   
+</deployment>

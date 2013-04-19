@@ -1,0 +1,28 @@
+<!DOCTYPE html 
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>JBoss JSF Bean Validation Integration Test</title>
+  </head>
+  <body>
+    <h3>The name should fail Bean Validation if length less than 2</h3>
+    <f:view>
+      <h:form id="form1">    
+        
+        <h:outputText value="Enter your name:" rendered="#{empty validatedBean.name}" id="prompt"/>
+        <h:outputText value="Hello #{validatedBean.name}" rendered="#{!empty validatedBean.name}" id="greeting"/><br/>
+        
+        <h:inputText value="#{validatedBean.name}" id="input_name"/>          
+        <h:message for="input_name" styleClass="errorMessage"/>
+        <br/>
+        <h:commandButton value="Submit" action="/beanvalidation.xhtml" id="submit_button"/>
+      </h:form>
+    </f:view>
+    
+  </body>
+</html>

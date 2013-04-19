@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+         http://java.sun.com/xml/ns/j2ee/ejb-jar_2_1.xsd"
+         version="2.1">
+
+   <enterprise-beans>
+      <session>
+         <ejb-name>TestStatus</ejb-name>
+         <home>org.jboss.test.mdbdefaultraname.bean.TestStatusHome</home>
+         <remote>org.jboss.test.mdbdefaultraname.bean.TestStatus</remote>
+         <ejb-class>org.jboss.test.mdbdefaultraname.bean.TestStatusBean</ejb-class>
+         <session-type>Stateless</session-type>
+         <transaction-type>Container</transaction-type>        
+      </session>
+
+      <message-driven>
+         <ejb-name>MDBTestMessageListener</ejb-name>
+         <ejb-class>org.jboss.test.mdbdefaultraname.bean.MDBTestMessageListener</ejb-class>
+         <messaging-type>org.jboss.test.jca.inflow.TestMessageListener</messaging-type>
+         <transaction-type>Container</transaction-type>
+         <activation-config>
+            <activation-config-property>
+               <activation-config-property-name>name</activation-config-property-name>
+               <activation-config-property-value>testInflow</activation-config-property-value>
+            </activation-config-property>
+            <!-- Other non-String properties to test the ActivationSpec java bean -->
+            <activation-config-property>
+               <activation-config-property-name>anInt</activation-config-property-name>
+               <activation-config-property-value>5</activation-config-property-value>
+            </activation-config-property>
+            <activation-config-property>
+               <activation-config-property-name>anInteger</activation-config-property-name>
+               <activation-config-property-value>55</activation-config-property-value>
+            </activation-config-property>
+            <activation-config-property>
+               <activation-config-property-name>localhost</activation-config-property-name>
+               <activation-config-property-value>127.0.0.1</activation-config-property-value>
+            </activation-config-property>
+            <activation-config-property>
+               <activation-config-property-name>props</activation-config-property-name>
+               <activation-config-property-value>
+                  key1=value1
+                  key2=value2
+                  key3=value3
+               </activation-config-property-value>
+            </activation-config-property>
+        </activation-config>
+      </message-driven>
+
+      <message-driven>
+         <ejb-name>StandardMDB</ejb-name>
+         <ejb-class>org.jboss.test.mdbdefaultraname.bean.StandardMDB</ejb-class>
+         <transaction-type>Container</transaction-type>
+         <activation-config>
+            <activation-config-property>
+               <activation-config-property-name>destination</activation-config-property-name>
+               <activation-config-property-value>queue/DLQ</activation-config-property-value>
+            </activation-config-property>
+            <activation-config-property>
+               <activation-config-property-name>destinationType</activation-config-property-name>
+               <activation-config-property-value>javax.jms.Queue</activation-config-property-value>
+            </activation-config-property>
+         </activation-config>
+      </message-driven>
+
+   </enterprise-beans>
+</ejb-jar>

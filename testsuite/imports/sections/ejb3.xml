@@ -1,0 +1,348 @@
+<project name="tests-ejb3-jars">
+   <!-- when adding new targets, do not forget to add it to _jars-ejb3 (see bottom) -->
+
+   <target name="jbas6161" depends="compile">
+      <mkdir dir="${build.lib}" />
+      
+      <jar destfile="${build.lib}/jbas6161.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/jbas6161/**" />
+         </fileset>
+      </jar>
+      
+      <jar destfile="${build.lib}/jbas6161-A.ear">
+         <fileset dir="${build.lib}" includes="jbas6161.jar"/>
+      </jar>
+      
+      <jar destfile="${build.lib}/jbas6161-B.ear">
+         <fileset dir="${build.lib}" includes="jbas6161.jar"/>
+      </jar>
+   </target>
+   
+   <target name="jbas6239" depends="compile">
+      <mkdir dir="${build.lib}" />
+      
+      <jar destfile="${build.lib}/jbas6239.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/jbas6239/**" />
+         </fileset>
+         <fileset dir="${source.resources}/ejb3/jbas6239" includes="**">
+         </fileset>
+      </jar>
+   </target>
+   
+   <target name="jbas7526" depends="compile">
+      <mkdir dir="${build.lib}" />
+      <jar destfile="${build.lib}/jbas7526.war">
+         <zipfileset dir="${build.classes}" includes="org/jboss/test/ejb3/jbas7526/*" prefix="WEB-INF/classes"/>
+      </jar>
+   </target>
+   
+   <target name="jbas7556" depends="compile">
+      <mkdir dir="${build.lib}" />
+      <jar destfile="${build.lib}/jbas7556.jar">
+         <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/jbas7556/*"/>
+      </jar>
+   </target>
+
+   <target name="jbas7883" depends="compile">
+      <mkdir dir="${build.lib}" />
+      <jar destfile="${build.lib}/jbas7883.jar">
+         <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/jbas7883/*"/>
+      </jar>
+   	  <copy file="${source.resources}/ejb3/jbas7883/jbas7883-service.xml" todir="${build.lib}" />
+   </target>	
+	
+   <!-- This issue affected the ejb3 AS module -->
+   <target name="ejbthree1597" depends="compile">
+      <mkdir dir="${build.lib}"/>
+      <jar destfile="${build.lib}/ejbthree1597.jar">
+         <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/ejbthree1597/*.class"></fileset>
+        <fileset dir="${source.resources}/ejb3/ejbthree1597" includes="**"></fileset>
+      </jar>
+   </target>
+
+   <target name="ejbthree7376" depends="compile">
+      <mkdir dir="${build.lib}"/>
+      <jar destfile="${build.lib}/ejbthree7376.jar">
+         <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/ejbthree7376/*.class"></fileset>
+        <fileset dir="${source.resources}/ejb3/ejbthree7376" includes="**">
+	 <include name="META-INF/persistence.xml"/>
+	</fileset>
+            
+      </jar>
+   </target>
+   
+   <target name="ejb3-servlet" depends="compile"
+      description="Builds all jar files."
+      >
+
+      <mkdir dir="${build.lib}"/>
+
+      <jar jarfile="${build.lib}/ejb3-servlet-ejbs.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/servlet/*.class"/>
+            <exclude name="org/jboss/test/ejb3/servlet/War*.class"/>
+         </fileset>
+         <fileset dir="${source.resources}/ejb3/servlet">
+            <include name="*.properties"/>
+            <include name="META-INF/jboss.xml"/>
+         </fileset>
+      </jar>
+
+      <jar jarfile="${build.lib}/ejb3-servlet-client.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/servlet/War*.class"/>
+         </fileset>
+      </jar>
+
+      <war warfile="${build.lib}/ejb3-servlet.war"
+         webxml="${source.resources}/ejb3/servlet/WEB-INF/test-web.xml">
+         <webinf dir="${source.resources}/ejb3/servlet/WEB-INF">
+            <include name="jboss-web.xml"/>
+         </webinf>
+         <classes dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/servlet/servlets/**"/>
+         </classes>
+         <lib dir="${build.lib}">
+            <include name="ejb3-servlet-client.jar"/>
+         </lib>
+      </war>
+
+      <ear earfile="${build.lib}/ejb3-servlet.ear"
+         appxml="${source.resources}/ejb3/servlet/META-INF/application.xml"
+         manifest="${source.resources}/ejb3/servlet/META-INF/MANIFEST.MF">
+         <fileset dir="${build.lib}">
+            <include name="ejb3-servlet-ejbs.jar"/>
+            <include name="ejb3-servlet.war"/>
+            <include name="ejb3-servlet-client.jar"/>
+         </fileset>
+         <fileset dir="${source.resources}/ejb3/servlet">
+            <include name="META-INF/jboss-app.xml"/>
+            <include name="servlet-security-service.xml"/>
+         </fileset>
+      </ear>
+
+      <copy todir="${build.lib}">
+         <fileset dir="${source.resources}/ejb3/servlet">
+            <include name="servlet-security-service.xml"/>
+         </fileset>
+      </copy>
+   </target>
+   
+   <target name="jboss51xsd" depends="compile">
+	   <mkdir dir="${build.lib}" />
+	   
+	   <jar destfile="${build.lib}/jboss51xsd.jar">
+		   <fileset dir="${build.classes}">
+			   <include name="org/jboss/test/ejb3/jboss51xsd/**" />
+		   </fileset>
+		   <fileset dir="${source.resources}/ejb3/jboss51xsd" includes="**">
+		   </fileset>
+	   </jar>
+   </target>
+	
+   <target name="ejb31nointerface" depends="compile">
+	   <mkdir dir="${build.lib}" />
+	   
+	   <jar destfile="${build.lib}/ejb31nointerface.jar">
+		   <fileset dir="${build.classes}">
+			   <include name="org/jboss/test/ejb3/nointerface/**" />
+		   </fileset>
+	   </jar>
+   </target>
+
+   <target name="ejb3war" depends="compile">
+	   <mkdir dir="${build.lib}" />
+	   
+	   <jar destfile="${build.lib}/ejb3-webinf-lib-jar.jar">
+		   <fileset dir="${build.classes}">
+			   <include name="org/jboss/test/ejb3/war/deployment/CounterBeanInWEBINFLibJar.class" />
+		   </fileset>
+	   </jar>
+   	
+   		<war warfile="${build.lib}/ejb3war.war"
+   	         webxml="${source.resources}/ejb3/war/deployment/web.xml">
+   			
+   			<webinf dir="${source.resources}/ejb3/war/deployment">
+   			            <include name="ejb-jar.xml"/>
+			</webinf>
+   			
+   	         <classes dir="${build.classes}">
+   	            <include name="org/jboss/test/ejb3/war/deployment/Counter.class"/>
+   	         	<include name="org/jboss/test/ejb3/war/deployment/CounterDelegateBeanInWarEjbJarXml.class"/>
+   	         	<include name="org/jboss/test/ejb3/war/deployment/CalculatorInWEBINFClasses.class"/>
+   	         </classes>
+   	         <lib dir="${build.lib}">
+   	            <include name="ejb3-webinf-lib-jar.jar"/>
+   	         </lib>
+   	      </war>
+   	
+   </target>
+   
+   <target name="jbpapp3026" depends="compile">
+	   <mkdir dir="${build.lib}" />
+	   
+	   <jar destfile="${build.lib}/createdestination-mdb.jar">
+		   <fileset dir="${build.classes}">
+			   <include name="org/jboss/test/ejb3/jbpapp3026/**" />
+		   </fileset>
+		   <fileset dir="${build.resources}/ejb3/jbpapp3026" includes="**"/>
+	   </jar>
+   </target>
+
+   <target name="ejb31singleton" depends="compile">
+	   <mkdir dir="${build.lib}" />
+	   
+   		<jar destfile="${build.lib}/ejb31singleton.jar">
+   			   <fileset dir="${build.classes}">
+   				   <include name="org/jboss/test/ejb3/singleton/**" />
+                   <exclude name="org/jboss/test/ejb3/singleton/security/**" />
+                   <exclude name="org/jboss/test/ejb3/singleton/startup/**" />
+   			   </fileset>
+   		   </jar>
+   </target>
+
+   <target name="ejb31async" depends="compile">
+      <mkdir dir="${build.lib}" />
+      <jar destfile="${build.lib}/ejb31-async.jar">
+         <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/async/*"/>
+      </jar>
+   </target>
+
+    <target name="ejb3-portable-jndi-names" depends="compile">
+        <mkdir dir="${build.lib}" />
+        <!--  EJB3.1 deployment jar -->
+        <jar destfile="${build.lib}/ejb31-portable-jndi-names.jar">
+            <fileset dir="${build.classes}" includes="org/jboss/test/ejb3/spec/global/jndi/*"/>
+        </jar>
+        <!--  EJB3.0 deployment jar -->
+        <jar destfile="${build.lib}/ejb30-portable-jndi-names.jar">
+            <!-- Include all beans except singleton beans (since Singletons are only for EJB3.1) -->
+            <fileset dir="${build.classes}">
+                <include name="org/jboss/test/ejb3/spec/global/jndi/*"/>
+                <exclude name="org/jboss/test/ejb3/spec/global/jndi/SimpleSingleton.class"/>
+                <exclude name="org/jboss/test/ejb3/spec/global/jndi/JNDI31LookupBean.class"/>
+            </fileset>
+            <!-- Include the ejb-jar.xml which explicitly marks this as 3.0 deployment -->
+            <fileset dir="${build.resources}/ejb3/spec/global/jndi">
+                <include name="META-INF/ejb-jar.xml"/>
+            </fileset>
+            
+        </jar>
+      
+    </target>
+
+   <target name="_jars-ejb3" depends="ejb3-servlet,jbas6161,jbas6239,
+      jbas7526,
+      jbas7556,
+   	  jbas7883,
+      ejbthree1597,ejbthree7376, jboss51xsd, ejb31nointerface, ejb3war, jbpapp3026, ejb31singleton,ejb31async, 
+      ejb3-portable-jndi-names,
+      singleton-security,
+      ejbthree2227,
+      ejbthree2227-service">
+      <mkdir dir="${build.lib}" />
+
+      <!-- A jar with a simple ejb3 session -->
+      <jar destfile="${build.lib}/simple-session.jar">
+         <fileset dir="${build.classes}">
+            <include name="org/jboss/test/ejb3/basic/**" />
+         </fileset>
+      </jar>
+   </target>
+
+    <target name="singleton-security" depends="compile">
+        <mkdir dir="${build.lib}" />
+
+            <jar destfile="${build.lib}/ejb3-singleton-security.jar">
+                   <fileset dir="${build.classes}">
+                       <include name="org/jboss/test/ejb3/singleton/security/**" />
+                   </fileset>
+                   <fileset dir="${source.resources}/ejb3/singleton/security" includes="**">
+                   </fileset>
+               </jar>
+    </target>
+
+    <target name="ejbthree2227" depends="compile">
+        <mkdir dir="${build.lib}" />
+
+        <jar destfile="${build.lib}/a-ejbthree2227.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/singleton/startup/StartupSingletonA.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/b-ejbthree2227.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/singleton/startup/SLSBOne.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/z-ejbthree2227.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/singleton/startup/SLSBTwo.class" />
+                   <include name="org/jboss/test/ejb3/singleton/startup/DoSomethingView.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/c-ejbthree2227.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/singleton/startup/SingletonB.class" />
+                   <include name="org/jboss/test/ejb3/singleton/startup/SingletonBeanRemoteView.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/ejbthree2227.ear">
+           <fileset dir="${build.lib}">
+              <include name="a-ejbthree2227.jar"/>
+              <include name="b-ejbthree2227.jar"/>
+              <include name="c-ejbthree2227.jar"/>
+              <include name="z-ejbthree2227.jar"/>
+           </fileset>
+        </jar>
+
+    </target>
+
+    <target name="ejbthree2227-service" depends="compile">
+        <mkdir dir="${build.lib}" />
+
+        <jar destfile="${build.lib}/a-ejbthree2227-service.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/service/ServiceA.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/b-ejbthree2227-service.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/service/SLSBOne.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/z-ejbthree2227-service.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/service/SLSBTwo.class" />
+                   <include name="org/jboss/test/ejb3/service/DoSomethingView.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/c-ejbthree2227-service.jar">
+               <fileset dir="${build.classes}">
+                   <include name="org/jboss/test/ejb3/service/SimpleSingleton.class" />
+                   <include name="org/jboss/test/ejb3/service/SingletonBeanRemoteView.class" />
+               </fileset>
+        </jar>
+
+        <jar destfile="${build.lib}/ejbthree2227-service.ear">
+           <fileset dir="${build.lib}">
+              <include name="a-ejbthree2227-service.jar"/>
+              <include name="b-ejbthree2227-service.jar"/>
+              <include name="c-ejbthree2227-service.jar"/>
+              <include name="z-ejbthree2227-service.jar"/>
+           </fileset>
+        </jar>
+
+    </target>
+
+  
+</project>

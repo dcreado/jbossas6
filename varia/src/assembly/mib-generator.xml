@@ -1,0 +1,26 @@
+<assembly>
+  <id>mib-generator</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <dependencySets>
+   <dependencySet>
+    <outputDirectory>/</outputDirectory>
+    <unpack>true</unpack>
+    <includes>
+     <include>org.jboss:jbossxb</include>
+     <include>org.jboss.logging:jboss-logging</include>
+    </includes>
+   </dependencySet>  
+  </dependencySets>
+  <fileSets>
+    <fileSet>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+        <include>org/jboss/jmx/adaptor/snmp/generator/**</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>

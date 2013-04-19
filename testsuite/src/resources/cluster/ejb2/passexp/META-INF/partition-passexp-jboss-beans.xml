@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+  
+  <!-- Don't inject the real AS thread pool, as it has a classloader
+       leak and we don't want to leak this classloader to it -->
+  <threads xmlns="urn:jboss:threads:2.0">
+    <thread-group name="PassExpThreadFactoryGroup" group-name="PassExp Threads"/>
+    
+    <thread-factory name="PassExpThreadFactory">
+      <thread-group name="PassExpThreadFactoryGroup"/>
+    </thread-factory>
+    
+    <queueless-thread-pool-executor name="PassExpThreadPool" blocking="true">
+      <max-threads count="200" per-cpu="500"/>
+      <thread-factory name="PassExpThreadFactory"/>
+      <task-filter>
+        <clear-context-classloader/>
+        <clear-tls/>
+      </task-filter>
+    </queueless-thread-pool-executor>
+  </threads>
+
+  <!-- Add a stack with JGroups message bundling disabled to the app server's standard JChannelFactory -->
+  <bean name="PassExpStackInjector" class="java.lang.Object">      
+     <install bean="JChannelFactory" method="setMultiplexerConfig">
+        <parameter class="java.lang.String">META-INF/passexp-stacks.xml</parameter>
+        <parameter>true</parameter>
+     </install>
+  </bean> 
+  
+  <!-- 
+       The HAPartitionCache instance defined here is shared by JBoss cluster services that
+       use JBossCache as their underlying data store.  Currently the services that share this 
+       cache are HAJNDI and DistributedState.  It is possible to change the cluster name but this 
+       isn't recommended since it will be more difficult for others to recognize that the renamed 
+       cluster is the one used by JBoss cluster services.  
+  -->
+  
+  <!-- First we create a Configuration object for the cache -->
+  <bean name="PassExpCacheContainerRegistryConfigurationEntry"
+        class="org.jboss.ha.ispn.config.CacheContainerRegistryConfigurationEntry">
+  
+    <depends>PassExpStackInjector</depends>
+    
+    <!-- When we're installed, register ourself -->
+    <install bean="CacheContainerRegistry" method="add">
+      <parameter><this/></parameter>
+    </install>
+    
+    <!-- When we're uninstalled, unregister ourself -->
+    <uninstall bean="CacheContainerRegistry" method="remove">
+      <parameter><this/></parameter>
+    </uninstall>
+    
+    <property name="id">passexp-partition</property>
+    <property name="configuration">
+      <bean class="org.jboss.ha.ispn.CacheContainerConfiguration">
+        <constructor>
+          <parameter>
+            <bean class="org.infinispan.config.GlobalConfiguration">
+              <property name="transportClass">org.infinispan.remoting.transport.jgroups.JGroupsTransport</property>
+              <property name="clusterName">PassExpPartition-HAPartitionCache</property>
+              <property name="transportProperties">
+                <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
+                  <entry>
+                    <key>stack</key>
+                    <value>${jboss.multiplexer.stack:udp}</value>
+                  </entry>
+                </map>
+              </property>
+            </bean>
+          </parameter>
+          <parameter>
+            <bean class="org.infinispan.config.Configuration">
+              <property name="invocationBatchingEnabled">true</property>
+              <property name="fetchInMemoryState">true</property>
+              <property name="cacheMode">REPL_SYNC</property>
+            </bean>
+          </parameter>
+        </constructor>
+      </bean>
+    </property>
+  </bean>
+
+   <!-- ==================================================================== -->
+   <!-- Cluster Partition: defines cluster                                   -->
+   <!-- ==================================================================== -->
+
+  <bean name="PassExpCacheHandler" class="org.jboss.ha.framework.server.ispn.HAPartitionCacheHandler">
+    <constructor>
+      <parameter><inject bean="CacheContainerRegistry"/></parameter>
+    </constructor>
+    <property name="cacheContainerName">passexp-partition</property>
+    <depends>PassExpCacheContainerRegistryConfigurationEntry</depends>
+  </bean>
+
+  <bean name="PassExpDistributedState" class="org.jboss.ha.framework.server.ispn.DistributedState">
+    <!--annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=DistributedState,partitionName=${jboss.partition.name:DefaultPartition}", exposedInterface=org.jboss.ha.framework.server.DistributedStateImplMBean.class, registerDirectly=true)</annotation-->
+    <constructor>
+      <parameter><inject bean="PassExpCacheHandler"/></parameter>
+    </constructor>
+    <property name="cacheName">distributed-state</property>
+  </bean>
+
+  <bean name="PassExpPartition" class="org.jboss.ha.framework.server.ClusterPartition">
+    
+    <depends>jboss:service=Naming</depends>
+    
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=PassExpPartition", exposedInterface=org.jboss.ha.framework.server.ClusterPartitionMBean.class)</annotation>
+    
+    <property name="channelSource"><inject bean="PassExpDistributedState"/></property>
+    
+    <!-- Name of the partition being built -->
+    <property name="partitionName">PassExpPartition</property>
+    
+    <!-- Max time (in ms) to wait for state transfer to complete. Increase for large states -->
+    <property name="stateTransferTimeout">30000</property>
+    
+    <!-- Max time (in ms) to wait for RPC calls to complete. -->
+    <property name="methodCallTimeout">60000</property>
+    
+    <property name="distributedStateImpl"><inject bean="PassExpDistributedState"/></property>
+    
+  </bean>
+  
+  <bean name="PassExpConnector" class="org.jboss.remoting.transport.Connector">
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.remoting:service=PassExpConnector,transport=socket", exposedInterface=org.jboss.remoting.transport.ConnectorMBean.class, registerDirectly=true)</annotation>
+    <constructor>
+      <!-- Remember that if you do use more than one param on the uri, will have to include as a CDATA, -->
+      <!-- otherwise, parser will complain. -->      
+      <!-- JBAS-8540
+       NOTE: In order to handle both IPv4 and IPv6 address literals in URLs (see rfc2732), the value of
+       the InvokerURL attribute is now constructed using the ServiceBindingManger, using the following format:
+         <value-factory bean="ServiceBindingManager" method="getStringBinding">
+           <parameter>servicename</parameter>
+           <parameter>bindingname</parameter>
+           <parameter>URL string</parameter>
+           <parameter>actual host</parameter>
+           <parameter>actual port</parameter>
+         </value-factory>
+       where 'URL string' is a string which may contain the substitution variables host, hostforurl and port.
+       The value-factory element will return a string with the variables ${host}, ${hostforurl} and ${port}
+       replaced with the values for host, hostforurl and port in the metadata for the ServiceBindingManager's
+       entry for that servicename/bindingname pair.
+       In order to ensure that the values 'actual host' and 'actual port' are used in the variable substitution,
+       you must ensure that servicename and bindingname are unique to your bean deployment on the AS
+       and do not match any existing ServiceBindingManager metadata entries. A safe approach is to use the
+       following practice:
+          servicename = the JMX ObjectName of your bean deployment
+          bindingname = any identifier unique among all beans deployed with the same servicename
+       If these values are not unique, you may instead pick up the host and port of an existing ServiceBindingManager
+       metadata entry which is probably not what you want.
+      -->          
+      <parameter>
+		<value-factory bean="ServiceBindingManager" method="getStringBinding">
+	  	  <parameter>PassExpConnector</parameter>
+	  	  <parameter><null/></parameter>
+	      <parameter><![CDATA[socket://${hostforurl}:${port}/?datatype=invocation&marshaller=org.jboss.invocation.unified.marshall.InvocationMarshaller&unmarshaller=org.jboss.invocation.unified.marshall.InvocationUnMarshaller&enableTcpNoDelay=true]]></parameter>
+	      <parameter>${jboss.bind.address}</parameter>
+	      <parameter>24446</parameter>
+	    </value-factory>
+      </parameter>
+      <parameter>
+        <map class="java.util.HashMap" keyClass="java.lang.String" valueClass="java.lang.String">
+          <entry><key>dataType</key><value>invocation</value></entry>
+          <entry><key>marshaller</key><value>org.jboss.invocation.unified.marshall.InvocationMarshaller</value></entry>
+          <entry><key>unmarshaller</key><value>org.jboss.invocation.unified.marshall.InvocationUnMarshaller</value></entry>
+          <entry><key>serverBindAddress</key><value>${jboss.bind.address:localhost}</value></entry>
+          <entry><key>serverBindPort</key><value>24446</value></entry>
+          <entry><key>enableTcpNoDelay</key><value>true</value></entry>
+        </map>
+      </parameter>
+    </constructor>
+  </bean>
+
+
+  
+  <bean name="PassExpHAJNDI" class="org.jboss.ha.jndi.HANamingService">
+    <!-- The partition used for group RPCs to find locally bound objects on other nodes -->
+    <property name="HAPartition"><inject bean="PassExpPartition"/></property>
+    
+    <!-- Handler for the replicated tree -->
+    <property name="distributedTreeManager">
+      <bean class="org.jboss.ha.jndi.ispn.DistributedTreeManager">
+        <constructor>
+          <parameter><inject bean="CacheContainerRegistry"/></parameter>
+        </constructor>
+        <property name="cacheContainerName">passexp-partition</property>
+        <property name="cacheName">distributed-tree</property>
+      </bean>
+    </property>
+    
+    <property name="localNamingInstance"><inject bean="jboss:service=NamingBeanImpl" property="namingInstance"/></property>
+    
+    <!-- The thread pool used to control the bootstrap and auto discovery lookups -->
+    <property name="lookupPool"><inject bean="PassExpThreadPool"/></property>
+    
+    <!-- Bind address of bootstrap endpoint -->
+    <property name="bindAddress">${jboss.bind.address}</property>
+    <!-- Port on which the HA-JNDI stub is made available -->
+    <property name="port">11100</property>
+    
+    <!-- Bind address of the HA-JNDI RMI endpoint -->
+    <property name="rmiBindAddress">${jboss.bind.address}</property>
+    
+    <!-- RmiPort to be used by the HA-JNDI service once bound. 0 => auto. -->
+    <property name="rmiPort">11101</property>
+    
+    <!-- Accept backlog of the bootstrap socket -->
+    <property name="backlog">50</property>
+
+    <!-- A flag to disable the auto discovery via multicast -->
+    <property name="discoveryDisabled">false</property>
+    <!-- Set the auto-discovery bootstrap multicast bind address. If not 
+    specified and a BindAddress is specified, the BindAddress will be used. -->
+    <property name="autoDiscoveryBindAddress">${jboss.bind.address}</property>
+    <!-- Multicast Address and group port used for auto-discovery -->
+    <property name="autoDiscoveryAddress">${jboss.partition.udpGroup:230.0.0.4}</property>
+    <property name="autoDiscoveryGroup">11102</property>
+    <!-- The TTL (time-to-live) for autodiscovery IP multicast packets -->
+    <property name="autoDiscoveryTTL">16</property>
+    
+    <!-- The load balancing policy for HA-JNDI -->
+    <property name="loadBalancePolicy">org.jboss.ha.framework.interfaces.RoundRobin</property>
+
+    <!-- Client socket factory to be used for client-server
+         RMI invocations during JNDI queries
+    <property name="clientSocketFactory">custom</property>
+    -->
+    <!-- Server socket factory to be used for client-server
+         RMI invocations during JNDI queries
+    <property name="serverSocketFactory">custom</property>
+    -->
+  </bean>
+  
+  <!-- ==================================================================== -->
+  <!-- HA Detached Invoker using JBoss Remoting for transport               -->
+  <!-- ==================================================================== -->
+
+  <bean name="PassExpUnifiedInvokerHA" class="org.jboss.invocation.unified.server.UnifiedInvokerHA">
+      
+    <depends>jboss:service=TransactionManager</depends>       
+    <depends>PassExpPartition</depends>
+    
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=invoker,type=unifiedha,partitionName=PassExpPartition", exposedInterface=org.jboss.invocation.unified.server.UnifiedInvokerMBean.class, registerDirectly=true)</annotation>
+    
+    <property name="connector"><inject bean="PassExpConnector"/></property>
+  </bean>
+   
+  <!-- ==================================================================== -->
+  <!-- HA Session State Service for EJB2 SFSBs                              -->
+  <!-- ==================================================================== -->
+
+  <bean name="PassExpHASessionStateService" class="org.jboss.ha.hasessionstate.server.HASessionStateService">
+      
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss:service=HASessionState,partitionName=PassExpPartition", exposedInterface=org.jboss.ha.hasessionstate.server.HASessionStateServiceMBean.class, registerDirectly=true)</annotation>
+    
+    <!--  Partition used for group RPCs -->
+    <property name="HAPartition"><inject bean="PassExpPartition"/></property>
+    
+    <!-- JNDI name under which the service is bound -->
+    <property name="jndiName">/HASessionState/PassExpPartition</property>
+    <!-- Max delay before cleaning unreclaimed state.
+         Defaults to 30*60*1000 => 30 minutes -->
+    <property name="beanCleaningDelay">0</property>
+    
+  </bean>
+
+  <!-- ==================================================================== -->
+  <!-- Distributed EJB2 entity cache invalidation                           -->
+  <!-- ==================================================================== -->
+
+  <bean name="PassExpJGCacheInvalidationBridge" class="org.jboss.cache.invalidation.bridges.JGCacheInvalidationBridge">
+      
+    <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="jboss.cache:service=InvalidationBridge,type=JavaGroups,partitionName=PassExpPartition", exposedInterface=org.jboss.cache.invalidation.bridges.JGCacheInvalidationBridgeMBean.class, registerDirectly=true)</annotation>
+    
+    <!--  Partition used for group RPCs -->
+    <property name="HAPartition"><inject bean="PassExpPartition"/></property>
+    <property name="invalidationManager"><inject bean="jboss.cache:service=InvalidationManager"/></property>
+    <property name="bridgeName">PassExpJGBridge</property>
+    
+  </bean>
+  
+</deployment>

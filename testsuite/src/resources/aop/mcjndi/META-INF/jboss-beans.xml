@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+      
+   <lifecycle-configure xmlns="urn:jboss:aop-beans:1.0"
+      name="DependencyAdvice"
+      class="org.jboss.aop.microcontainer.aspects.jndi.JndiLifecycleCallback"
+      classes="@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding">
+      <property name="env">
+           <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
+              <entry>
+                 <key>java.naming.factory.initial</key>
+                 <value>org.jnp.interfaces.NamingContextFactory</value>
+               </entry>
+              <entry>
+                 <key>java.naming.factory.url.pkgs</key>
+                 <value>org.jboss.naming:org.jnp.interfaces</value>
+               </entry>
+           </map>
+      </property>
+   </lifecycle-configure>
+      
+   <bean name="AnnotatedPojo" class="org.jboss.test.aop.mcjndi.AnnotatedPojo" />
+
+   <bean name="XmlPojo" class="org.jboss.test.aop.mcjndi.XmlPojo">
+      <annotation>@org.jboss.aop.microcontainer.aspects.jndi.JndiBinding(name="pojo/XmlBean")</annotation>
+   </bean>
+      
+</deployment>

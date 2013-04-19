@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+    version="3.0">
+    
+   <module-name>acl-integration-war</module-name>
+   <description>Web Application that tests ACL Integration with the web container</description>
+   <servlet>
+     <servlet-name>ACLServlet</servlet-name>
+     <servlet-class>org.jboss.test.web.servlets.ACLServlet</servlet-class>
+   </servlet>
+   <servlet-mapping>
+      <servlet-name>ACLServlet</servlet-name>
+      <url-pattern>/acl</url-pattern>
+   </servlet-mapping>
+</web-app>

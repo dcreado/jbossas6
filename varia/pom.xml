@@ -1,0 +1,492 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+  </parent>
+  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-varia</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Varia</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (varia module)</description>
+  
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/resources</directory>
+                </resource>
+              </resources>
+              <outputDirectory>target/resources</outputDirectory>
+              <includeEmptyDirs>true</includeEmptyDirs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assembly</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/autonumber-plugin.xml</descriptor>
+                <descriptor>src/assembly/counter-plugin.xml</descriptor>
+                <descriptor>src/assembly/deployment-service.xml</descriptor>
+                <descriptor>src/assembly/deployment-service-sar.xml</descriptor>
+                <descriptor>src/assembly/derby-plugin.xml</descriptor>
+                <descriptor>src/assembly/foe-deployer-3.2-sar.xml</descriptor>
+                <descriptor>src/assembly/hsqldb-plugin.xml</descriptor>
+                <descriptor>src/assembly/hsqldb.xml</descriptor>
+                <descriptor>src/assembly/http-invoker-sar.xml</descriptor>
+                <descriptor>src/assembly/httpha-invoker-sar.xml</descriptor>
+                <descriptor>src/assembly/jboss-bean-deployer.xml</descriptor>
+                <descriptor>src/assembly/jboss-bindingservice.xml</descriptor>
+                <descriptor>src/assembly/jboss-monitoring.xml</descriptor>
+                <descriptor>src/assembly/jboss-samlsso.xml</descriptor>
+                <descriptor>src/assembly/jboss-srp-client.xml</descriptor>
+                <descriptor>src/assembly/jboss-srp.xml</descriptor>
+                <descriptor>src/assembly/jbossjmx-ant.xml</descriptor>
+                <descriptor>src/assembly/jmx-console.xml</descriptor>
+                <descriptor>src/assembly/logging-monitor.xml</descriptor>
+                <descriptor>src/assembly/mail-plugin.xml</descriptor>
+                <descriptor>src/assembly/mbean-configurator-sar.xml</descriptor>
+                <descriptor>src/assembly/netboot.xml</descriptor>
+                <descriptor>src/assembly/persistent-service-sar.xml</descriptor>
+                <descriptor>src/assembly/process-plugin.xml</descriptor>
+                <descriptor>src/assembly/properties-plugin.xml</descriptor>
+                <descriptor>src/assembly/scheduler-plugin-example.xml</descriptor>
+                <descriptor>src/assembly/scheduler-plugin.xml</descriptor>
+                <descriptor>src/assembly/snmp-adaptor.xml</descriptor>
+                <descriptor>src/assembly/snmp-adaptor-sar.xml</descriptor>
+                <descriptor>src/assembly/statscollector.xml</descriptor>
+                <descriptor>src/assembly/threaddump.xml</descriptor>
+                <descriptor>src/assembly/xmlentitymgr.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+          <execution>
+           <id>MIBGenerator</id>
+            <goals>
+             <goal>single</goal>
+            </goals>
+           <phase>package</phase>
+	   <configuration>
+	    <descriptors>
+	     <descriptor>src/assembly/mib-generator.xml</descriptor>
+	    </descriptors>
+	    <archive>
+	     <manifest>
+	      <mainClass>org.jboss.jmx.adaptor.snmp.generator.MIBGenerator</mainClass>
+	     </manifest>
+            </archive>
+           </configuration>
+          </execution> 
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                  
+                <!-- Some files in etc are copied into the dist build -->                              
+                <mkdir dir="target/etc"/>
+                <copy todir="target/etc" filtering="yes">
+                  <fileset dir="src/etc">
+                    <include name="**"/>
+                  </fileset>
+                </copy>
+
+                <!-- build deployers -->
+            
+                <property name="build.deployers" location="target/deployers"/>
+                <property name="source.resources" location="src/resources"/>
+                
+                <mkdir dir="${build.deployers}/bsh.deployer"/>
+                <mkdir dir="${build.deployers}/bsh.deployer/META-INF"/>
+            
+                <jar jarfile="${build.deployers}/bsh.deployer/bsh-deployer.jar">
+                  <fileset dir="${project.build.outputDirectory}">
+                    <include name="org/jboss/varia/deployment/BeanShell**"/>
+                    <include name="org/jboss/varia/deployment/Script**"/>
+                    <include name="org/jboss/varia/deployment/Test**"/>
+                    <include name="org/jboss/varia/deployment/Legacy**"/>
+                  </fileset>
+                </jar>
+            
+                <copy todir="${build.deployers}/bsh.deployer/META-INF">
+                   <fileset file="${source.resources}/beanshell/bsh-deployers-jboss-beans.xml"/>
+                </copy>
+            
+                <!-- beanvalidation.deployer -->
+                <mkdir dir="${build.deployers}/beanvalidation.deployer"/>
+                <mkdir dir="${build.deployers}/beanvalidation.deployer/META-INF"/>
+
+                <copy todir="${build.deployers}/beanvalidation.deployer/META-INF">
+                   <fileset dir="${source.resources}/beanvalidation">
+                     <include name="*.xml"/>
+                   </fileset>
+                </copy>
+
+                <copy todir="${build.deployers}/beanvalidation.deployer">
+                  <fileset file="${maven.dependency.org.jboss.beanvalidation.beanvalidation-deployers.jar.path}"/>
+                </copy>
+                
+                <!-- seam.deployer -->
+                <mkdir dir="${build.deployers}/seam.deployer"/>
+                <mkdir dir="${build.deployers}/seam.deployer/META-INF"/>
+            
+                <copy todir="${build.deployers}/seam.deployer/META-INF">
+                   <fileset dir="${source.resources}/seam">
+                     <include name="*.xml"/>
+                   </fileset>
+                </copy>
+            
+                <copy todir="${build.deployers}/seam.deployer">
+                  <fileset file="${maven.dependency.org.jboss.seam.integration.jboss-seam-int-microcontainer.jar.path}"/>
+                </copy>
+            
+                <!-- jboss-bean.deployer -->
+                <mkdir dir="target/kernel/jboss-bean.deployer"/>
+                <copy todir="target/kernel/jboss-bean.deployer" filtering="no">
+                  <fileset file="target/jboss-bean-deployer.jar"/>
+                  <fileset file="${maven.dependency.org.jboss.kernel.jboss-aop-mc-int.jar.path}"/>
+                  <fileset file="${maven.dependency.org.jboss.kernel.jboss-dependency.jar.path}"/>
+                  <fileset file="${maven.dependency.org.jboss.kernel.jboss-kernel.jar.path}"/>
+                  <fileset dir="target/resources/kernel">
+                     <include name="**/*.xml"/>
+                  </fileset>
+                </copy>
+
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+       <groupId>org.jboss</groupId>
+       <artifactId>mibgen-maven-plugin</artifactId>
+       <version>1.0</version>
+       <configuration>
+        <attributesFile>${project.basedir}/src/resources/services/snmp/deploy/attributes.xml</attributesFile>
+        <notificationsFile>${project.basedir}/src/resources/services/snmp/deploy/notifications.xml</notificationsFile>
+        <moduleName>JBOSS-AS-DEFAULT</moduleName>
+        <outputFile>${project.build.directory}/resources/services/snmp/deploy/attributes.mib</outputFile>
+       </configuration>
+       <executions>
+        <execution> 
+         <phase>compile</phase>
+         <goals>
+          <goal>generate-mib</goal>
+         </goals>
+	</execution>
+       </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Compile (global dependencies) -->
+    <dependency>
+      <groupId>org.jboss.bootstrap</groupId>
+      <artifactId>jboss-bootstrap-spi-as</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-ejb3</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>opensaml</groupId>
+      <artifactId>opensaml</artifactId>
+    </dependency>
+    
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jboss-common-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.cluster</groupId>
+      <artifactId>jboss-ha-server-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.kernel</groupId>
+      <artifactId>jboss-dependency</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-server</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>apache-velocity</groupId>
+      <artifactId>velocity</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.snmp4j</groupId>
+      <artifactId>snmp4j</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.beanshell</groupId>
+      <artifactId>bsh</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>apache-bsf</groupId>
+      <artifactId>bsf</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-cluster</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.mx</groupId>
+      <artifactId>jboss-j2se</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.kernel</groupId>
+      <artifactId>jboss-kernel</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-core-spi</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-impl</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.deployers</groupId>
+      <artifactId>jboss-deployers-vfs</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.integration</groupId>
+      <artifactId>jboss-transaction-spi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-transaction-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jboss.javaee</groupId>
+          <artifactId>jboss-jca-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.logging</groupId>
+      <artifactId>jboss-logging</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnp-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.naming</groupId>
+      <artifactId>jnpserver</artifactId>       
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.spec.javax.servlet</groupId>
+      <artifactId>jboss-servlet-api_3.0_spec</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.picketbox</groupId>
+      <artifactId>jbosssx-client</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.service.binding</groupId>
+      <artifactId>jboss-service-binding-core</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>oswego-concurrent</groupId>
+      <artifactId>concurrent</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss</groupId>
+      <artifactId>jbossxb</artifactId>
+    </dependency>
+    
+    <!-- Needed for assemblies -->
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jboss.seam.integration</groupId>
+      <artifactId>jboss-seam-int-microcontainer</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.beanvalidation</groupId>
+      <artifactId>beanvalidation-deployers</artifactId>
+    </dependency>
+      
+  </dependencies>
+  
+  <profiles>
+    <profile>
+      <id>jdk5</id>
+      <activation>
+        <jdk>1.5</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.0.2</version>
+            <configuration>
+              <excludes>
+                <exclude>org/jboss/varia/stats/*JDK6.java</exclude>
+                <exclude>org/jboss/tm/plugins/tyrex/*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>jdk6</id>
+      <activation>
+        <jdk>1.6</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.0.2</version>
+            <configuration>
+              <excludes>
+                <exclude>org/jboss/varia/stats/*JDK5.java</exclude>
+                <exclude>org/jboss/tm/plugins/tyrex/*.java</exclude>
+                <exclude>org/jboss/jdo/castor/*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+	<!-- Maven 2.0.x does not allow version ranges for <jdk> for activating profiles. 
+	    Maven 2.1 does http://maven.apache.org/guides/introduction/introduction-to-profiles.html
+	    So for Maven 2.0.x we create another profile which will do the same
+	    as the jdk6 profile, except that it will be activated for JDK 1.7 version -->
+    <profile>
+      <id>jdk7</id>
+      <activation>
+        <jdk>1.7</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.0.2</version>
+            <configuration>
+              <excludes>
+                <exclude>org/jboss/varia/stats/*JDK5.java</exclude>
+                <exclude>org/jboss/tm/plugins/tyrex/*.java</exclude>
+                <exclude>org/jboss/jdo/castor/*.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  
+</project>

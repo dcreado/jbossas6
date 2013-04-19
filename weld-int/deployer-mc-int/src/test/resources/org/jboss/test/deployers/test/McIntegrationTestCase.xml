@@ -1,0 +1,59 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="WeldElementSchemaInstaller" class="org.jboss.weld.integration.deployer.mc.WeldElementSchemaInstaller"/>
+
+  <bean name="EarStructure" class="org.jboss.test.deployers.vfs.structure.ear.support.MockEarStructureDeployer"/>
+  <bean name="WarStructure" class="org.jboss.test.deployers.vfs.structure.war.support.MockWarStructureDeployer"/>
+
+  <bean name="JWBMDDeployer" class="org.jboss.weld.integration.deployer.ext.JBossWeldMetaDataDeployer"/>
+  <bean name="WBFilesDeployer" class="org.jboss.weld.integration.deployer.metadata.WeldFilesDeployer"/>
+  <bean name="WBDiscoveryDeployer" class="org.jboss.weld.integration.deployer.env.WeldDiscoveryDeployer"/>
+
+  <bean name="DynamicDependencyCreator" class="org.jboss.weld.integration.deployer.env.DynamicDependencyCreator">
+    <constructor>
+      <parameter><inject bean="jboss.kernel:service=KernelController"/></parameter>
+    </constructor>
+  </bean>
+
+  <bean name="JBWMDDeployer" class="org.jboss.test.deployers.support.deployer.MockWebDeployer"/>
+  <bean name="WarCLDeployer" class="org.jboss.test.deployers.support.deployer.MockWarClassLoaderDeployer"/>
+  <bean name="MockUrlIntDeployer" class="org.jboss.test.deployers.support.deployer.MockCoreIntegrationDeployer"/>
+
+  <bean name="MockValidatorFactoryDeployer" class="org.jboss.test.deployers.support.deployer.MockValidatorFactoryDeployer"/>
+  
+  <beanfactory name="JBossJpaServices" class="org.jboss.test.deployers.support.MockJBossJpaServices"/>
+  
+  <bean name="EjbServicesDeployer" class="org.jboss.weld.integration.deployer.env.EjbServicesDeployer"/>
+
+  <bean name="DeploymentDeployer" class="org.jboss.weld.integration.deployer.env.FlatDeploymentDeployer"/>
+
+  <bean name="WeldBootstrapDeployer" class="org.jboss.weld.integration.deployer.env.WeldBootstrapDeployer"/>
+  
+  <bean name="WeldBeanMetaDataDeployerPlugin" class="org.jboss.weld.integration.deployer.mc.WeldBeanMetaDataDeployerPlugin"/>
+  
+  <bean name="JBossSecurityServices" class="org.jboss.weld.integration.security.JBossSecurityServices"/>
+   
+  <bean name="JBossResourceServices" class="org.jboss.weld.integration.resource.JBossResourceServices"/> 
+
+  <!-- Mock EJB utils -->
+
+  <beanfactory name="JBossEjbServices" class="org.jboss.weld.integration.ejb.JBossEjbServices"/>
+  
+  <bean name="JBossTransactionServices" class="org.jboss.test.deployers.support.MockTransactionServices"/>
+
+  <bean name="RealTransactionManager" class="java.lang.Object"/>
+
+  <!--  Annotation scanning -->
+  <bean name="ScanningMDDeployer"  class="org.jboss.scanning.deployers.metadata.ScanningMetaDataDeployer"/>
+
+  <bean name="ScannerDeployer"  class="org.jboss.scanning.deployers.ScanningDeployer">
+    <property name="filter">
+      <bean  class="org.jboss.scanning.deployers.filter.ScanningDeploymentUnitFilter"/>
+    </property>
+    <incallback method="addFactory" />
+    <uncallback method="removeFactory" />
+  </bean>
+
+  <bean name="AnnScanningPlugin"  class="org.jboss.scanning.annotations.plugins.AnnotationsScanningPluginFactory"/>  
+
+</deployment>

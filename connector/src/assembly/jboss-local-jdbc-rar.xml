@@ -1,0 +1,20 @@
+<assembly>
+  <id>jboss-local-jdbc-rar</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>src/resources/local-rar</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>
+  <files>
+    <file>
+      <source>target/jboss-as-connector-jboss-local-jdbc.jar</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>jboss-local-jdbc.jar</destName>
+    </file>
+  </files>
+</assembly>

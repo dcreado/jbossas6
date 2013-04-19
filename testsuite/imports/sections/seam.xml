@@ -1,0 +1,37 @@
+<project name="tests-seam-jars" xmlns:maven="antlib:org.apache.maven.artifact.ant">
+
+   <property name="seam_version" value="2.1.0.GA"/>
+   <property name="seam2_version" value="2.2.1.Final"/>
+
+   <target name="_jars-seam" depends="init-maven-ant-tasks">
+   	
+      <mkdir dir="${build.lib}"/>
+
+      <maven:dependencies filesetId="examples.fileset" versionsId="examples.versions">
+          <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-booking" version="${seam2_version}" type="ear"/>
+      	  <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-booking" version="${seam2_version}" type="xml" classifier="ds"/>
+      	  <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-dvdstore" version="${seam2_version}" type="ear"/>
+      	  <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-dvdstore" version="${seam2_version}" type="xml" classifier="ds"/>
+      	  <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-numberguess" version="${seam2_version}" type="ear"/>
+   <!--   <dependency groupId="org.jboss.seam.examples" artifactId="jboss-seam-jpa" version="${seam_version}" type="war"/>  -->
+      	  <remoterepository id="repository.jboss.org" url="http://repository.jboss.org/nexus/content/groups/public-jboss"/>
+      	  <remoterepository id="snapshots.jboss.org" url="http://repository.jboss.org/nexus/content/repositories/snapshots"/>
+      </maven:dependencies>
+
+   	
+      <copy todir="${build.lib}">
+   	<fileset refid="examples.fileset" />
+   	  <mapper classpathref="maven-ant-tasks.classpath"
+   	  	  classname="org.apache.maven.artifact.ant.VersionMapper" from="${examples.versions}" to="flatten" />
+      </copy>
+
+      <!-- JBAS-7594 - Copy jboss-seam-jpa.war till the example is updated -->
+      <copy todir="${build.lib}" overwrite="true" flatten="true">
+        <fileset dir="${source.resources}/deployers/seam">
+          <include name="*/*.*"/>
+        </fileset>
+      </copy>
+   	
+   </target>
+   	  	
+</project>

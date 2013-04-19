@@ -1,0 +1,14 @@
+<deployment xmlns="urn:jboss:bean-deployer:2.0">
+
+  <bean name="EarStructure" class="org.jboss.test.deployers.vfs.structure.ear.support.MockEarStructureDeployer"/>
+  <bean name="WarStructure" class="org.jboss.test.deployers.vfs.structure.war.support.MockWarStructureDeployer"/>
+  <bean name="WarClassLoader" class="org.jboss.test.deployers.vfs.reflect.support.MockWarClassLoaderDeployer"/>
+
+  <bean name="JWBMDDeployer" class="org.jboss.weld.integration.deployer.ext.JBossWeldMetaDataDeployer"/>
+  <bean name="WBFilesDeployer" class="org.jboss.weld.integration.deployer.metadata.WeldFilesDeployer"/>
+  <bean name="ArchiveInfoDeployer" class="org.jboss.weld.integration.deployer.env.ArchiveInfoDeployer"/>
+
+  <!--  Target of the Test -->
+  <bean name="ArchiveDiscoveryDeployer" class="org.jboss.weld.integration.deployer.env.ArchiveDiscoveryDeployer"/>
+
+</deployment>

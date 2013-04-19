@@ -1,0 +1,145 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>org.jboss.jbossas</groupId>
+    <artifactId>jboss-as-parent</artifactId>
+    <version>6.1.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jboss.jbossas</groupId>
+  <artifactId>jboss-as-main</artifactId>
+  <packaging>jar</packaging>
+  <name>JBoss Application Server Main</name>
+  <url>http://www.jboss.org/jbossas</url>
+  <description>JBoss Application Server (main module)</description>
+  <build>
+    <finalName>${project.artifactId}</finalName>
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <!-- This makes available properties containing version components (major, minor, etc) -->
+          <execution>
+            <id>parse-version</id>
+            <goals>
+              <goal>parse-version</goal>
+            </goals>
+            <phase>validate</phase>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>today-date</id>
+            <goals>
+              <goal>create</goal>
+            </goals>
+            <phase>validate</phase>
+            <configuration>
+              <revisionOnScmFailure>unavailable</revisionOnScmFailure>
+              <timestampFormat>{0, date, yyyyMMdd}</timestampFormat>
+              <timestampPropertyName>today</timestampPropertyName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assemble-run-jar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/run.xml</descriptor>
+              </descriptors>
+              <archive>
+                <manifestEntries>
+                  <Main-Class>org.jboss.Main</Main-Class>
+                  <Class-Path>../client/getopt.jar</Class-Path>
+                  <Implementation-Version>${project.version} (Build SVNTag:JBoss_${project.version} date:${today})</Implementation-Version>
+                </manifestEntries>
+              </archive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>create-output</id>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                
+                <mkdir dir="target/bin"/>
+                <copy todir="target/bin" filtering="yes">
+                  <fileset dir="src/bin">
+                    <include name="**/*"/>
+                  </fileset>
+                </copy>
+                
+                <fixcrlf srcdir="target/bin"
+                  eol="lf" eof="remove"
+                  includes="**/*.sh, **/*.conf"/>
+              
+                <fixcrlf srcdir="target/bin"
+                  eol="crlf" eof="remove"
+                  includes="**/*.bat, **/*.cmd"/>
+              
+                <chmod perm="+x">
+                  <fileset dir="target/bin">
+                    <include name="**/*.sh"/>
+                  </fileset>
+                </chmod>
+                
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <!-- Compile Dependencies -->
+    <dependency>
+      <groupId>org.jboss.bootstrap</groupId>
+      <artifactId>jboss-bootstrap-spi-as</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>gnu-getopt</groupId>
+      <artifactId>getopt</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+    
+    <!-- Assembly Dependencies -->
+    <dependency>
+      <groupId>org.jboss.jbossas</groupId>
+      <artifactId>jboss-as-system-jmx</artifactId>
+    </dependency>
+  </dependencies>
+  
+</project>
