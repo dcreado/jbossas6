@@ -393,6 +393,111 @@
         </endpoint-interceptors>
       </proxy-factory-config>
     </invoker-proxy-binding>
+    
+    <invoker-proxy-binding>
+      <name>stateless-http-invoker</name>
+      <invoker-mbean>jboss:service=invoker,type=http</invoker-mbean>
+      <proxy-factory>org.jboss.proxy.ejb.ProxyFactory</proxy-factory>
+      <proxy-factory-config>
+       <client-interceptors>
+         <home>
+           <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+           <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+           <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+         </home>
+         <bean>
+           <interceptor>org.jboss.proxy.ejb.StatelessSessionInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+           <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+           <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+         </bean>
+       </client-interceptors>
+      </proxy-factory-config>
+    </invoker-proxy-binding>
+    
+    <invoker-proxy-binding>
+      <name>stateful-http-invoker</name>
+      <invoker-mbean>jboss:service=invoker,type=http</invoker-mbean>
+      <proxy-factory>org.jboss.proxy.ejb.ProxyFactory</proxy-factory>
+      <proxy-factory-config>
+        <client-interceptors>
+          <home>
+            <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SingleRetryInterceptor</interceptor>
+            <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+            <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+          </home>
+          <bean>
+            <interceptor>org.jboss.proxy.ejb.StatefulSessionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SingleRetryInterceptor</interceptor>
+            <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+            <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+          </bean>
+        </client-interceptors>
+      </proxy-factory-config>
+    </invoker-proxy-binding>
+    
+    <invoker-proxy-binding>
+      <name>stateless-http-invokerha</name>
+      <invoker-mbean>jboss:service=invoker,type=httpHA</invoker-mbean>
+      <proxy-factory>org.jboss.proxy.ejb.ProxyFactoryHA</proxy-factory>
+      <proxy-factory-config>
+       <client-interceptors>
+         <home>
+           <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+           <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+           <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+         </home>
+         <bean>
+           <interceptor>org.jboss.proxy.ejb.StatelessSessionInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+           <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+           <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+           <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+         </bean>
+       </client-interceptors>
+      </proxy-factory-config>
+    </invoker-proxy-binding>
+    
+    <invoker-proxy-binding>
+      <name>stateful-http-invokerha</name>
+      <invoker-mbean>jboss:service=invoker,type=httpHA</invoker-mbean>
+      <proxy-factory>org.jboss.proxy.ejb.ProxyFactoryHA</proxy-factory>
+      <proxy-factory-config>
+        <client-interceptors>
+          <home>
+            <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SingleRetryInterceptor</interceptor>
+            <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+            <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+          </home>
+          <bean>
+            <interceptor>org.jboss.proxy.ejb.StatefulSessionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SecurityContextInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+            <interceptor>org.jboss.proxy.ejb.SingleRetryInterceptor</interceptor>
+            <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+            <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+          </bean>
+        </client-interceptors>
+      </proxy-factory-config>
+    </invoker-proxy-binding>
+    
   </invoker-proxy-bindings>
 
   <container-configurations>
@@ -1107,7 +1212,27 @@
         <MaximumSize>100</MaximumSize>
       </container-pool-conf>
     </container-configuration>
+    
+    <container-configuration extends="Clustered Stateless SessionBean">
+      <container-name>Clustered Http Stateless SessionBean</container-name>
+      <invoker-proxy-binding-name>stateless-http-invokerha</invoker-proxy-binding-name>
+    </container-configuration>
 
+    <container-configuration extends="Clustered Stateful SessionBean">
+      <container-name>Clustered Http Stateful SessionBean</container-name>
+      <invoker-proxy-binding-name>stateful-http-invokerha</invoker-proxy-binding-name>
+    </container-configuration>
+
+ 	<container-configuration extends="Standard Stateless SessionBean">
+      <container-name>Standard Http Stateless SessionBean</container-name>
+      <invoker-proxy-binding-name>stateless-http-invoker</invoker-proxy-binding-name>
+    </container-configuration>
+
+    <container-configuration extends="Standard Stateful SessionBean">
+      <container-name>Standard Http Stateful SessionBean</container-name>
+      <invoker-proxy-binding-name>stateful-http-invoker</invoker-proxy-binding-name>
+    </container-configuration>
+    
   </container-configurations>
 
 </jboss>

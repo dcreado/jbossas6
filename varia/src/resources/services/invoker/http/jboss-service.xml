@@ -19,7 +19,7 @@
         <value-factory bean="ServiceBindingManager" method="getStringBinding">
            <parameter>jboss.web:service=WebServer</parameter>
            <parameter>HttpConnector</parameter>
-           <parameter>http://${hostforurl}:${port}/invoker/EJBInvokerServlet</parameter>
+           <parameter>http://${public.firewall.address}:${public.firewall.port}/invoker/EJBInvokerServlet</parameter>
         </value-factory>
      </attribute>
   </mbean>
@@ -36,7 +36,7 @@
         <value-factory bean="ServiceBindingManager" method="getStringBinding">
            <parameter>jboss.web:service=WebServer</parameter>
            <parameter>HttpConnector</parameter>
-           <parameter>http://${hostforurl}:${port}/invoker/JMXInvokerServlet</parameter>
+           <parameter>http://${public.firewall.address}:${public.firewall.port}/invoker/JMXInvokerServlet</parameter>
         </value-factory>
       </attribute>
       <attribute name="ExportedInterface">org.jnp.interfaces.Naming</attribute>
@@ -63,7 +63,7 @@
         <value-factory bean="ServiceBindingManager" method="getStringBinding">
            <parameter>jboss.web:service=WebServer</parameter>
            <parameter>HttpConnector</parameter>
-           <parameter>http://${hostforurl}:${port}/invoker/readonly/JMXInvokerServlet</parameter>
+           <parameter>http://${public.firewall.address}:${public.firewall.port}/invoker/readonly/JMXInvokerServlet</parameter>
         </value-factory>
       </attribute>
       <attribute name="ExportedInterface">org.jnp.interfaces.Naming</attribute>
